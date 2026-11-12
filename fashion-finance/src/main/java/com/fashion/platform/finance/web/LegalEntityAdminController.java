@@ -54,3 +54,4 @@ public class LegalEntityAdminController {
         return ResponseEntity.ok(legalEntityService.changeStatus(id, status));
     }
 }
+

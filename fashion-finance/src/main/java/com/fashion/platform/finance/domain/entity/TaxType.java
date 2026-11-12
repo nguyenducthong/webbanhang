@@ -6,3 +6,4 @@ public enum TaxType {
     PIT,
     OTHER
 }
+

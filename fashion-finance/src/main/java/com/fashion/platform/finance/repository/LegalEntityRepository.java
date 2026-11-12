@@ -16,3 +16,4 @@ public interface LegalEntityRepository extends JpaRepository<LegalEntity, UUID> 
     boolean existsByEntityCode(String entityCode);
     Page<LegalEntity> findByStatus(LegalEntityStatus status, Pageable pageable);
 }
+

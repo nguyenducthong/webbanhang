@@ -48,3 +48,4 @@ VALUES (
     '123 Le Loi, District 1, Ho Chi Minh City',
     'ACTIVE'
 ) ON CONFLICT (entity_code) DO NOTHING;
+

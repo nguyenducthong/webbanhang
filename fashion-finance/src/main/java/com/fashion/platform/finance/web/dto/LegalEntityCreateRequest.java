@@ -28,3 +28,4 @@ public class LegalEntityCreateRequest {
     private String address;
     private String countryCode;
 }
+

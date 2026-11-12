@@ -23,3 +23,4 @@ public class LegalEntityUpdateRequest {
     private String businessRegistrationNo;
     private String address;
 }
+

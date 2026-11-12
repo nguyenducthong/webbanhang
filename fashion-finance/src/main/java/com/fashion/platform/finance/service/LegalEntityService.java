@@ -127,3 +127,4 @@ public class LegalEntityService {
                 .orElseThrow(() -> new NoSuchElementException("Legal entity not found with id: " + id));
     }
 }
+

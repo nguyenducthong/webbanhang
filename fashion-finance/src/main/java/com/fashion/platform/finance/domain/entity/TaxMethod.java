@@ -6,3 +6,4 @@ public enum TaxMethod {
     EXEMPT,
     OTHER
 }
+

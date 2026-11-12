@@ -110,3 +110,4 @@ public class TaxConfigurationService {
         return TaxConfigResponse.from(configs.get(0));
     }
 }
+

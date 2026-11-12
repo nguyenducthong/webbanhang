@@ -28,3 +28,4 @@ public class TaxConfigCreateRequest {
 
     private String configJson;
 }
+

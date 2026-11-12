@@ -87,3 +87,4 @@ public class LegalEntity {
         this.updatedBy = actorId;
     }
 }
+

@@ -31,3 +31,4 @@ public interface TaxConfigurationRepository extends JpaRepository<TaxConfigurati
             @Param("taxType") TaxType taxType,
             @Param("date") LocalDate date);
 }
+

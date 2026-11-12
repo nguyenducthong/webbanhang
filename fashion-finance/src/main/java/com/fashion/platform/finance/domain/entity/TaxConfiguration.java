@@ -79,3 +79,4 @@ public class TaxConfiguration {
         this.approvedAt = Instant.now();
     }
 }
+

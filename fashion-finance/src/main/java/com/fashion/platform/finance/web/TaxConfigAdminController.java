@@ -53,3 +53,4 @@ public class TaxConfigAdminController {
         return ResponseEntity.ok(taxConfigurationService.approve(entityId, configId));
     }
 }
+

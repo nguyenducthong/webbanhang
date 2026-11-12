@@ -69,3 +69,4 @@ class TaxConfigurationTest {
         assertThat(tc.getApprovedAt()).isNotNull();
     }
 }
+
