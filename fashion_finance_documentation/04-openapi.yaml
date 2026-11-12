@@ -1,0 +1,304 @@
+openapi: 3.1.0
+info:
+  title: Fashion Platform Finance API
+  version: 1.0.0
+  description: API contract starter for Finance, E-Invoice, Reconciliation and Reporting.
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+paths:
+  /finance/dashboard:
+    get:
+      summary: Finance dashboard
+      parameters:
+        - $ref: '#/components/parameters/FromDate'
+        - $ref: '#/components/parameters/ToDate'
+        - $ref: '#/components/parameters/Channel'
+      responses:
+        '200':
+          description: Dashboard metrics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  currencyCode: { type: string, example: VND }
+                  grossSales: { $ref: '#/components/schemas/Money' }
+                  netSales: { $ref: '#/components/schemas/Money' }
+                  cashReceived: { $ref: '#/components/schemas/Money' }
+                  platformReceivable: { $ref: '#/components/schemas/Money' }
+                  codReceivable: { $ref: '#/components/schemas/Money' }
+                  grossProfit: { $ref: '#/components/schemas/Money' }
+  /finance/transactions:
+    get:
+      summary: Search finance transactions
+      parameters:
+        - $ref: '#/components/parameters/FromDate'
+        - $ref: '#/components/parameters/ToDate'
+        - $ref: '#/components/parameters/Channel'
+      responses:
+        '200':
+          description: Transaction page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page'
+  /finance/costs:
+    post:
+      summary: Create cost record
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CostCreate'
+      responses:
+        '201': { description: Created }
+        '409': { description: Idempotency conflict }
+  /invoices:
+    get:
+      summary: Search invoices
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: channel
+          in: query
+          schema: { type: string, enum: [WEBSITE, SHOPEE, TIKTOK, OFFLINE, OTHER] }
+        - $ref: '#/components/parameters/FromDate'
+        - $ref: '#/components/parameters/ToDate'
+      responses:
+        '200':
+          description: Invoice page
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Page' }
+  /invoices/draft:
+    post:
+      summary: Create invoice draft from order snapshot
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvoiceDraftCreate'
+      responses:
+        '201': { description: Draft created }
+        '422': { description: Validation failed }
+  /invoices/{invoiceId}/validate:
+    post:
+      summary: Validate invoice draft
+      parameters:
+        - $ref: '#/components/parameters/InvoiceId'
+      responses:
+        '200': { description: Validation result }
+  /invoices/{invoiceId}/issue:
+    post:
+      summary: Queue invoice issuance
+      parameters:
+        - $ref: '#/components/parameters/InvoiceId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '202': { description: Issuance queued }
+        '409': { description: Invoice is not issuable in current state }
+  /invoices/{invoiceId}/status:
+    get:
+      summary: Get invoice status and provider state
+      parameters:
+        - $ref: '#/components/parameters/InvoiceId'
+      responses:
+        '200': { description: Invoice status }
+  /invoices/{invoiceId}/documents:
+    get:
+      summary: Get invoice document metadata and temporary download URLs
+      parameters:
+        - $ref: '#/components/parameters/InvoiceId'
+      responses:
+        '200': { description: Document list }
+  /invoices/{invoiceId}/adjust:
+    post:
+      summary: Request invoice adjustment
+      parameters:
+        - $ref: '#/components/parameters/InvoiceId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '202': { description: Adjustment request queued }
+  /invoices/{invoiceId}/replace:
+    post:
+      summary: Request invoice replacement
+      parameters:
+        - $ref: '#/components/parameters/InvoiceId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '202': { description: Replacement request queued }
+  /webhooks/invoices/{providerCode}:
+    post:
+      summary: Receive provider callback
+      security: []
+      parameters:
+        - name: providerCode
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, additionalProperties: true }
+      responses:
+        '202': { description: Callback accepted after signature validation }
+        '401': { description: Invalid signature }
+  /reconciliation/batches:
+    get:
+      summary: List reconciliation batches
+      responses:
+        '200': { description: Batch page }
+    post:
+      summary: Create reconciliation batch
+      responses:
+        '201': { description: Batch created }
+  /reconciliation/batches/{batchId}/import:
+    post:
+      summary: Import a previously uploaded settlement file
+      parameters:
+        - name: batchId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '202': { description: Import queued }
+  /reconciliation/batches/{batchId}/match:
+    post:
+      summary: Run matching engine
+      parameters:
+        - name: batchId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '202': { description: Matching queued }
+  /reconciliation/exceptions:
+    get:
+      summary: Search reconciliation exceptions
+      responses:
+        '200': { description: Exception page }
+  /reconciliation/exceptions/{exceptionId}/resolve:
+    post:
+      summary: Resolve exception with reason and evidence
+      parameters:
+        - name: exceptionId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [resolutionCode, reason]
+              properties:
+                resolutionCode: { type: string }
+                reason: { type: string }
+                adjustmentAmount: { type: string, pattern: '^-?[0-9]+(\.[0-9]{1,4})?$' }
+      responses:
+        '200': { description: Exception resolved or routed for approval }
+  /reports/sales:
+    get:
+      summary: Sales report
+      parameters:
+        - $ref: '#/components/parameters/FromDate'
+        - $ref: '#/components/parameters/ToDate'
+        - $ref: '#/components/parameters/Channel'
+      responses:
+        '200': { description: Sales report }
+  /reports/profit-loss:
+    get:
+      summary: Management P&L report
+      responses:
+        '200': { description: P&L report }
+  /reports/export:
+    post:
+      summary: Create asynchronous report export
+      responses:
+        '202': { description: Export job queued }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    FromDate:
+      name: from
+      in: query
+      schema: { type: string, format: date }
+    ToDate:
+      name: to
+      in: query
+      schema: { type: string, format: date }
+    Channel:
+      name: channel
+      in: query
+      schema: { type: string, enum: [WEBSITE, SHOPEE, TIKTOK, OFFLINE, OTHER] }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, minLength: 8, maxLength: 150 }
+    InvoiceId:
+      name: invoiceId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  schemas:
+    Money:
+      type: object
+      required: [amount, currencyCode]
+      properties:
+        amount: { type: string, example: '1250000.0000' }
+        currencyCode: { type: string, example: VND }
+    CostCreate:
+      type: object
+      required: [costType, amount, currencyCode, occurredAt]
+      properties:
+        costType: { type: string }
+        amount: { type: string, pattern: '^[0-9]+(\.[0-9]{1,4})?$' }
+        currencyCode: { type: string, example: VND }
+        occurredAt: { type: string, format: date-time }
+        orderId: { type: string, format: uuid }
+        productId: { type: string, format: uuid }
+        description: { type: string }
+    InvoiceDraftCreate:
+      type: object
+      required: [legalEntityId, orderId, channel, buyerSnapshot, items]
+      properties:
+        legalEntityId: { type: string, format: uuid }
+        orderId: { type: string, format: uuid }
+        channel: { type: string, enum: [WEBSITE, SHOPEE, TIKTOK, OFFLINE] }
+        buyerSnapshot: { type: object, additionalProperties: true }
+        items:
+          type: array
+          items:
+            type: object
+            required: [itemName, quantity, unitPrice]
+            properties:
+              productId: { type: string, format: uuid }
+              sku: { type: string }
+              itemName: { type: string }
+              quantity: { type: string }
+              unitPrice: { type: string }
+              discountAmount: { type: string }
+              taxRate: { type: string }
+    Page:
+      type: object
+      properties:
+        items: { type: array, items: { type: object, additionalProperties: true } }
+        page: { type: integer }
+        size: { type: integer }
+        totalElements: { type: integer, format: int64 }
