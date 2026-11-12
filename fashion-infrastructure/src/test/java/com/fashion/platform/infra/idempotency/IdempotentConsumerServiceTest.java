@@ -57,3 +57,4 @@ class IdempotentConsumerServiceTest {
         verify(processedEventRepository, never()).save(any(ProcessedEventEntity.class));
     }
 }
+

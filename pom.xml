@@ -20,6 +20,7 @@
     <modules>
         <module>fashion-common</module>
         <module>fashion-infrastructure</module>
+        <module>fashion-finance</module>
         <module>fashion-app</module>
     </modules>
 
@@ -44,6 +45,11 @@
             <dependency>
                 <groupId>com.fashion.platform</groupId>
                 <artifactId>fashion-infrastructure</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fashion.platform</groupId>
+                <artifactId>fashion-finance</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

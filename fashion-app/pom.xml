@@ -24,6 +24,10 @@
             <groupId>com.fashion.platform</groupId>
             <artifactId>fashion-infrastructure</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.fashion.platform</groupId>
+            <artifactId>fashion-finance</artifactId>
+        </dependency>
 
         <!-- Web & Actuator -->
         <dependency>

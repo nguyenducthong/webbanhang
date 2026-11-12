@@ -68,3 +68,4 @@ Invoke-RestMethod -Uri "http://localhost:8080/api/v1/system/health"
 - `fashion-infrastructure`: Transactional Outbox Relay, Idempotent Consumer, MinIO Object Storage, Audit Log Service, Flyway Migrations.
 - `fashion-app`: Spring Boot Application Bootstrap, Context Filter, Health Endpoints.
 - `fashion_finance_documentation/`: Bộ tài liệu kỹ thuật, kiến trúc, DDL, OpenAPI và Roadmap 12 Sprints.
+
