@@ -32,6 +32,10 @@
             <groupId>com.fashion.platform</groupId>
             <artifactId>fashion-einvoice</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.fashion.platform</groupId>
+            <artifactId>fashion-reconciliation</artifactId>
+        </dependency>
 
         <!-- Web & Actuator -->
         <dependency>

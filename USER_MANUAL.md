@@ -19,7 +19,37 @@ Hệ thống được tích hợp sẵn giao diện Web Portal trực quan phụ
 
 ## 2. Hướng dẫn Thao tác Từng Phân Hệ (Sprints 1 -> 6)
 
-### 🔌 Phân hệ 1: Tích hợp Nhà cung cấp HĐĐT & Webhook CQT (Sprint 6)
+### ⚖️ Phân hệ 1: Đối soát & Khớp Lệnh Sàn TMĐT (Sprint 7)
+
+> Hệ thống phân tích dữ liệu sao kê quyết toán sàn TMĐT (Shopee, TikTok Shop, Ngân hàng, COD), thuật toán khớp tự động (Matching Engine) và hàng đợi xử lý ngoại lệ (Exception Queue).
+
+1. **Xem Bảng Thống Kê KPI Đối Soát**:
+   - Chọn menu bên trái: **"Đối soát & Khớp lệnh Sàn (S7)"**.
+   - Thẻ thống kê thời gian thực hiển thị:
+     - **Tỷ lệ Khớp Tự động (%)**: Tỷ lệ đơn hàng khớp chính xác cả mã đơn và số tiền thực nhận (`EXACT_MATCH`).
+     - **Số Đơn Khớp Hoàn Toàn**: Các đơn có chênh lệch `<= 0.0001 VND` được đánh dấu `RESOLVED` tự động.
+     - **Số Đơn Phát Hiện Lệch**: Đơn bị chênh lệch phí sàn (`FEE_MISMATCH`) hoặc sàn có mà nội bộ thiếu (`MISSING_INTERNAL`).
+     - **Tổng Giá Trị Tiền Lệch**: Tổng số tiền chênh lệch cần Kế toán trưởng phê duyệt bù trừ hoặc khiếu nại sàn.
+2. **Nạp Sao Kê Quyết Toán (CSV Ingestion)**:
+   - Hệ thống hỗ trợ đọc file sao kê quyết toán từ Shopee, TikTok Shop, Vietcombank, Giao Hàng Nhanh / ViettelPost COD.
+   - Nhấn nút **"Nạp Mẫu Sao Kê Shopee"**: Hệ thống tự động điền mẫu dữ liệu quyết toán Shopee hợp lệ gồm:
+     - Đơn `SP-20261113-001`: Khớp 100% với đơn nội bộ (450.000đ).
+     - Đơn `SP-20261113-002`: Sàn báo thực nhận 605.000đ, nhưng hệ thống ghi nhận 620.000đ (Lệch phí sàn 15.000đ).
+     - Đơn `SP-20261113-999`: Sàn báo thanh toán 280.000đ nhưng nội bộ chưa ghi nhận đơn hàng.
+   - Nhấn nút **"Khởi Chạy Đối Soát & Khớp Lệnh"**: Hệ thống chạy thuật toán băm SHA-256 chống nạp trùng file, bóc tách dữ liệu CSV, đối chiếu với `finance_transactions` và phân loại kết quả.
+3. **Quản Lý Danh Sách Đợt Đối Soát (Batches)**:
+   - Danh sách bảng đợt đối soát hiển thị Mã đợt (VD: `REC-SP-20261113-01`), Tên tệp, Kênh bán, Tiến độ khớp (thanh phần trăm trực quan), Tổng tiền sàn báo và Trạng thái đợt (`COMPLETED`, `DISCREPANCY_DETECTED`).
+   - Nhấn nút **"Chi tiết"** trên bất kỳ dòng đợt nào để tải bảng chi tiết bên dưới.
+4. **Phê Duyệt Xử Lý Chênh Lệch (Exception Resolution Queue)**:
+   - Kế toán viên / Kế toán trưởng kiểm tra bảng **"Chi Tiết Các Dòng Đối Soát"**.
+   - Các dòng có trạng thái `CHỜ KẾ TOÁN DUYỆT` (PENDING) sẽ hiển thị nút màu xanh **"Duyệt Xử Lý"**.
+   - Nhấn **"Duyệt Xử Lý"** -> Nhập lý do phê duyệt (VD: *"Chấp thuận bù trừ chi phí voucher sàn tháng 11"* hoặc *"Xác nhận ghi nhận chi phí quảng cáo Shopee Ads"*).
+   - Hệ thống cập nhật trạng thái dòng thành `RESOLVED`, lưu người duyệt (`performedBy`) và thời gian duyệt.
+   - Khi tất cả các dòng bất thường trong đợt đã được duyệt xử lý, đợt đối soát sẽ tự động chuyển trạng thái sang **`COMPLETED`**.
+
+---
+
+### 🔌 Phân hệ 2: Tích hợp Nhà cung cấp HĐĐT & Webhook CQT (Sprint 6)
 
 > Tích hợp Production Gateway (VNPT Invoice), Token Caching, Khóa bi quan chống cấp trùng và Webhook phản hồi từ Cơ quan Thuế (CQT).
 

@@ -53,10 +53,15 @@
             <nav class="space-y-1 bg-white p-3 rounded-xl border border-slate-200 shadow-sm sticky top-24">
                 <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-3 pt-2 pb-1">Các Phân Hệ (Sprints)</div>
                 
-                <button onclick="switchTab('tab-provider')" id="nav-provider" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all bg-indigo-50 text-indigo-700">
+                <button onclick="switchTab('tab-reconciliation')" id="nav-reconciliation" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all bg-indigo-50 text-indigo-700">
+                    <i class="ph ph-scales text-lg"></i>
+                    <span>Đối soát & Khớp lệnh Sàn (S7)</span>
+                    <span class="ml-auto text-[10px] bg-indigo-200 text-indigo-800 px-1.5 py-0.5 rounded font-bold">Mới</span>
+                </button>
+
+                <button onclick="switchTab('tab-provider')" id="nav-provider" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all">
                     <i class="ph ph-plugs-connected text-lg"></i>
                     <span>Tích hợp Provider & Webhook (S6)</span>
-                    <span class="ml-auto text-[10px] bg-indigo-200 text-indigo-800 px-1.5 py-0.5 rounded font-bold">Mới</span>
                 </button>
 
                 <button onclick="switchTab('tab-einvoice')" id="nav-einvoice" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all">
@@ -89,8 +94,175 @@
         <!-- Main Content Body -->
         <main class="flex-1 space-y-6">
 
+            <!-- TAB: RECONCILIATION CORE & MATCHING ENGINE (SPRINT 7) -->
+            <section id="tab-reconciliation" class="tab-content space-y-6">
+                <!-- Header Card -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900">Đối soát Doanh thu Sàn TMĐT & Matching Engine (Shopee / TikTok / COD)</h2>
+                        <p class="text-xs text-slate-500">Phân tích sao kê quyết toán sàn TMĐT, so khớp tự động với giao dịch nội bộ và giải quyết chênh lệch phí sàn</p>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="loadReconciliationBatches()" class="flex items-center space-x-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold px-3 py-2 rounded-lg border border-indigo-200 transition">
+                            <i class="ph ph-arrows-clockwise text-base"></i>
+                            <span>Làm mới Dữ liệu</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Reconciliation KPI Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-slate-500">Tỷ lệ Khớp Tự động</span>
+                            <span class="p-1.5 rounded-lg bg-emerald-50 text-emerald-600"><i class="ph ph-check-circle text-lg"></i></span>
+                        </div>
+                        <div class="text-2xl font-bold text-slate-900" id="recKpiMatchRate">0%</div>
+                        <div class="text-[11px] text-emerald-600 font-medium">Khớp chính xác không lệch tiền</div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-slate-500">Đơn Khớp Hoàn toàn</span>
+                            <span class="p-1.5 rounded-lg bg-indigo-50 text-indigo-600"><i class="ph ph-arrows-left-right text-lg"></i></span>
+                        </div>
+                        <div class="text-2xl font-bold text-indigo-700" id="recKpiMatchedCount">0</div>
+                        <div class="text-[11px] text-slate-400">Trạng thái EXACT_MATCH</div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-slate-500">Đơn Phát hiện Lệch</span>
+                            <span class="p-1.5 rounded-lg bg-amber-50 text-amber-600"><i class="ph ph-warning-circle text-lg"></i></span>
+                        </div>
+                        <div class="text-2xl font-bold text-amber-600" id="recKpiDiscrepancyCount">0</div>
+                        <div class="text-[11px] text-amber-700 font-medium">Lệch phí sàn / Thiếu giao dịch</div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-slate-500">Tổng Tiền Lệch</span>
+                            <span class="p-1.5 rounded-lg bg-rose-50 text-rose-600"><i class="ph ph-money text-lg"></i></span>
+                        </div>
+                        <div class="text-2xl font-bold text-rose-600" id="recKpiDiscrepancyAmount">0 ₫</div>
+                        <div class="text-[11px] text-rose-500 font-medium">Cần Kế toán trưởng xử lý</div>
+                    </div>
+                </div>
+
+                <!-- CSV Upload & Ingestion Section -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <div class="flex items-center space-x-2">
+                            <div class="bg-indigo-100 text-indigo-700 p-2 rounded-lg">
+                                <i class="ph ph-file-csv text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900">Nhập Sao Kê Quyết Toán Sàn & Ngân Hàng (CSV Ingestion)</h3>
+                                <p class="text-xs text-slate-500">Hỗ trợ định dạng sao kê quyết toán Shopee Pay, TikTok Shop, Chuyển khoản Vietcombank, Đối soát GHN/J&T COD</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="fillShopeeSampleCsv()" class="px-3 py-1.5 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg border border-slate-300 transition flex items-center space-x-1">
+                                <i class="ph ph-magic-wand text-sm"></i>
+                                <span>Nạp Mẫu Sao Kê Shopee</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Nguồn Sao Kê (Channel)</label>
+                            <select id="recSourceType" class="w-full text-xs border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                                <option value="SHOPEE">Shopee Seller Wallet (Sao kê hoàn tất)</option>
+                                <option value="TIKTOK">TikTok Shop Settlement Report</option>
+                                <option value="BANK_STATEMENT">Vietcombank Bank Statement</option>
+                                <option value="COD_CARRIER">Đơn vị Vận chuyển COD (GHN / ViettelPost)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Tên Tệp Sao Kê (File Name)</label>
+                            <input id="recFileName" type="text" value="Shopee_Report_Nov2026.csv" class="w-full text-xs border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none font-mono">
+                        </div>
+                        <div class="flex items-end">
+                            <button onclick="submitReconciliationCsv()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs py-2.5 px-4 rounded-lg shadow-sm flex items-center justify-center space-x-2 transition">
+                                <i class="ph ph-lightning text-base"></i>
+                                <span>Khởi Chạy Đối Soát & Khớp Lệnh</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">Dữ liệu CSV Raw (Dòng đầu tiên là Tiêu đề cột chuẩn sàn)</label>
+                        <textarea id="recCsvContent" rows="4" class="w-full text-xs font-mono p-3 bg-slate-900 text-emerald-400 rounded-lg border border-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="order_sn,payout_amount,fee,payout_date,status&#10;SP-20261113-001,450000,25000,2026-11-13 10:00:00,Completed&#10;SP-20261113-002,605000,45000,2026-11-13 11:30:00,Completed"></textarea>
+                    </div>
+                </div>
+
+                <!-- Reconciliation Batches List -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900">Danh Sách Các Đợt Đối Soát (Reconciliation Batches)</h3>
+                            <p class="text-xs text-slate-500">Mỗi đợt tương ứng với một lần nạp sao kê quyết toán từ kênh bán</p>
+                        </div>
+                        <span id="batchCountBadge" class="text-xs bg-slate-100 text-slate-600 font-semibold px-2 py-0.5 rounded-full">0 đợt</span>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase font-semibold">
+                                <tr>
+                                    <th class="py-3 px-4">Mã Đợt / Thời gian</th>
+                                    <th class="py-3 px-4">Kênh Bán</th>
+                                    <th class="py-3 px-4">Tên Tệp</th>
+                                    <th class="py-3 px-4 text-center">Tiến Độ So Khớp</th>
+                                    <th class="py-3 px-4 text-right">Tổng Tiền Sao Kê</th>
+                                    <th class="py-3 px-4 text-right">Chênh Lệch</th>
+                                    <th class="py-3 px-4 text-center">Trạng Thái</th>
+                                    <th class="py-3 px-4 text-center">Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recBatchesBody" class="divide-y divide-slate-100">
+                                <tr><td colspan="8" class="py-8 text-center text-slate-400">Đang tải dữ liệu đợt đối soát...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Batch Details & Reconciliation Items (Exception Queue) -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+                        <div class="flex items-center space-x-2">
+                            <span class="p-1.5 rounded-lg bg-indigo-100 text-indigo-700"><i class="ph ph-list-magnifying-glass text-lg"></i></span>
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900" id="selectedBatchTitle">Chi Tiết Các Dòng Đối Soát & Hàng Đợi Bất Thường (Exception Queue)</h3>
+                                <p class="text-xs text-slate-500" id="selectedBatchSubtitle">Chọn một đợt đối soát ở danh sách trên để xem chi tiết từng đơn hàng</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-white border-b border-slate-200 text-slate-600 uppercase font-semibold">
+                                <tr>
+                                    <th class="py-3 px-4">Mã Đơn / Mã GD Sàn</th>
+                                    <th class="py-3 px-4 text-right">Tiền Sàn Báo</th>
+                                    <th class="py-3 px-4 text-right">Tiền Nội Bộ</th>
+                                    <th class="py-3 px-4 text-right">Chênh Lệch</th>
+                                    <th class="py-3 px-4 text-center">Kết Quả Khớp</th>
+                                    <th class="py-3 px-4 text-center">Xử Lý Chênh Lệch</th>
+                                    <th class="py-3 px-4 text-center">Hành Động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recItemsBody" class="divide-y divide-slate-100">
+                                <tr><td colspan="7" class="py-8 text-center text-slate-400">Chưa có đợt đối soát nào được chọn. Hãy chọn một đợt phía trên.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
             <!-- TAB: FIRST PROVIDER INTEGRATION & WEBHOOK (SPRINT 6) -->
-            <section id="tab-provider" class="tab-content space-y-6">
+            <section id="tab-provider" class="tab-content space-y-6 hidden">
                 <!-- Header Card -->
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
                     <div>
@@ -586,6 +758,7 @@
                 activeNav.className = "nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all bg-indigo-50 text-indigo-700";
             }
 
+            if (tabId === "tab-reconciliation") loadReconciliationBatches();
             if (tabId === "tab-provider") { loadStuckInvoices(); loadWebhookLogs(); }
             if (tabId === "tab-einvoice") loadInvoices();
             if (tabId === "tab-ledger") loadLedgerAndCash();
@@ -943,8 +1116,241 @@
             }
         }
 
+        // --- SPRINT 7: RECONCILIATION JAVASCRIPT LOGIC ---
+        let currentSelectedBatchId = null;
+
+        function fillShopeeSampleCsv() {
+            const sample = `order_sn,payout_amount,fee,payout_date,status
+SP-20261113-001,450000,25000,2026-11-13 10:00:00,Completed
+SP-20261113-002,605000,45000,2026-11-13 11:30:00,Completed
+SP-20261113-999,280000,12000,2026-11-13 14:00:00,Completed`;
+            document.getElementById("recCsvContent").value = sample;
+            document.getElementById("recFileName").value = "Shopee_Settlement_" + new Date().toISOString().slice(0, 10).replace(/-/g, "") + ".csv";
+            document.getElementById("recSourceType").value = "SHOPEE";
+            showToast("Đã nạp dữ liệu mẫu sao kê quyết toán Shopee!", "success");
+        }
+
+        async function submitReconciliationCsv() {
+            const csvContent = document.getElementById("recCsvContent").value.trim();
+            if (!csvContent) {
+                showToast("Vui lòng nhập hoặc nạp nội dung CSV sao kê!", "error");
+                return;
+            }
+            if (!defaultLegalEntityId) await fetchDefaultLegalEntity();
+
+            const sourceType = document.getElementById("recSourceType").value;
+            const fileName = encodeURIComponent(document.getElementById("recFileName").value.trim() || "settlement.csv");
+
+            try {
+                showToast("Đang tải tệp & xử lý thuật toán Matching Engine...", "success");
+                const res = await fetch(`/api/v1/reconciliation/batches/upload-text?legalEntityId=${defaultLegalEntityId}&sourceType=${sourceType}&fileName=${fileName}`, {
+                    method: "POST",
+                    headers: {
+                        ...getHeaders(),
+                        "Content-Type": "text/plain; charset=utf-8"
+                    },
+                    body: csvContent
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || "Tải lên đối soát thất bại");
+
+                showToast(`Đối soát thành công! Mã đợt: ${data.batchCode} (${data.matchedRecords}/${data.totalRecords} khớp)`, "success");
+                await loadReconciliationBatches();
+                if (data.id) loadBatchItems(data.id, data.batchCode);
+            } catch (err) {
+                showToast(err.message, "error");
+            }
+        }
+
+        async function loadReconciliationBatches() {
+            if (!defaultLegalEntityId) await fetchDefaultLegalEntity();
+            const tbody = document.getElementById("recBatchesBody");
+            try {
+                const res = await fetch(`/api/v1/reconciliation/batches?legalEntityId=${defaultLegalEntityId}`, {
+                    headers: getHeaders()
+                });
+                const batches = await res.json();
+                if (!batches || batches.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="8" class="py-8 text-center text-slate-400 font-sans">Chưa có đợt đối soát nào. Nhấn "Nạp Mẫu Sao Kê Shopee" để bắt đầu trải nghiệm.</td></tr>`;
+                    document.getElementById("batchCountBadge").innerText = "0 đợt";
+                    return;
+                }
+
+                document.getElementById("batchCountBadge").innerText = `${batches.length} đợt`;
+
+                // Calculate KPIs
+                let totalRec = 0;
+                let matchedRec = 0;
+                let discrepancyRec = 0;
+                let totalDiscrepancyAmt = 0;
+
+                batches.forEach(b => {
+                    totalRec += (b.totalRecords || 0);
+                    matchedRec += (b.matchedRecords || 0);
+                    discrepancyRec += (b.discrepancyRecords || 0);
+                    const ext = Number(b.totalAmountExternal || 0);
+                    const intl = Number(b.totalAmountInternal || 0);
+                    totalDiscrepancyAmt += Math.abs(ext - intl);
+                });
+
+                const rate = totalRec > 0 ? Math.round((matchedRec / totalRec) * 100) : 0;
+                document.getElementById("recKpiMatchRate").innerText = rate + "%";
+                document.getElementById("recKpiMatchedCount").innerText = matchedRec.toLocaleString('vi-VN');
+                document.getElementById("recKpiDiscrepancyCount").innerText = discrepancyRec.toLocaleString('vi-VN');
+                document.getElementById("recKpiDiscrepancyAmount").innerText = formatCurrency(totalDiscrepancyAmt);
+
+                tbody.innerHTML = batches.map(b => {
+                    const statusClass = b.status === 'COMPLETED' ? 'bg-emerald-100 text-emerald-800' :
+                                       (b.status === 'DISCREPANCY_FOUND' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-800');
+                    const isSelected = currentSelectedBatchId === b.id;
+                    const rowBg = isSelected ? 'bg-indigo-50/60' : 'hover:bg-slate-50';
+                    const diff = Number(b.totalAmountExternal || 0) - Number(b.totalAmountInternal || 0);
+
+                    return `
+                        <tr class="${rowBg} transition cursor-pointer" onclick="loadBatchItems('${b.id}', '${b.batchCode}')">
+                            <td class="py-3 px-4">
+                                <div class="font-mono font-bold text-slate-900">${b.batchCode}</div>
+                                <div class="text-[11px] text-slate-400">${new Date(b.createdAt).toLocaleString('vi-VN')}</div>
+                            </td>
+                            <td class="py-3 px-4">
+                                <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">${b.sourceType}</span>
+                            </td>
+                            <td class="py-3 px-4 font-mono text-slate-600">${b.fileName || 'N/A'}</td>
+                            <td class="py-3 px-4 text-center">
+                                <div class="font-semibold text-slate-800">${b.matchedRecords} / ${b.totalRecords}</div>
+                                <div class="w-24 bg-slate-200 h-1.5 rounded-full mx-auto mt-1 overflow-hidden">
+                                    <div class="bg-indigo-600 h-full" style="width: ${b.totalRecords > 0 ? (b.matchedRecords/b.totalRecords*100) : 0}%"></div>
+                                </div>
+                            </td>
+                            <td class="py-3 px-4 text-right font-mono font-semibold text-slate-900">${formatCurrency(b.totalAmountExternal)}</td>
+                            <td class="py-3 px-4 text-right font-mono font-semibold ${Math.abs(diff) > 0 ? 'text-rose-600' : 'text-emerald-600'}">
+                                ${formatCurrency(diff)}
+                            </td>
+                            <td class="py-3 px-4 text-center">
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${statusClass}">${b.status}</span>
+                            </td>
+                            <td class="py-3 px-4 text-center">
+                                <button onclick="event.stopPropagation(); loadBatchItems('${b.id}', '${b.batchCode}')" class="px-2.5 py-1 text-[11px] font-semibold bg-white hover:bg-slate-100 text-indigo-600 border border-indigo-200 rounded shadow-sm">
+                                    Chi tiết
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join("");
+
+                // Auto-select first batch if none selected
+                if (!currentSelectedBatchId && batches.length > 0) {
+                    loadBatchItems(batches[0].id, batches[0].batchCode);
+                }
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="8" class="py-4 text-center text-rose-500">${err.message}</td></tr>`;
+            }
+        }
+
+        async function loadBatchItems(batchId, batchCode) {
+            currentSelectedBatchId = batchId;
+            const titleEl = document.getElementById("selectedBatchTitle");
+            const subtitleEl = document.getElementById("selectedBatchSubtitle");
+            titleEl.innerText = `Chi Tiết Đợt Đối Soát: ${batchCode}`;
+            subtitleEl.innerText = `Danh sách từng giao dịch sao kê và trạng thái so khớp đối soát`;
+
+            const tbody = document.getElementById("recItemsBody");
+            tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400">Đang tải chi tiết các đơn hàng...</td></tr>`;
+
+            try {
+                const res = await fetch(`/api/v1/reconciliation/batches/${batchId}/items`, {
+                    headers: getHeaders()
+                });
+                const items = await res.json();
+                if (!items || items.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400 font-sans">Không có dòng dữ liệu nào trong đợt này.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = items.map(item => {
+                    let matchBadge = "";
+                    if (item.matchStatus === 'EXACT_MATCH') {
+                        matchBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">EXACT_MATCH (Khớp 100%)</span>`;
+                    } else if (item.matchStatus === 'FEE_MISMATCH') {
+                        matchBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">FEE_MISMATCH (Lệch phí sàn)</span>`;
+                    } else if (item.matchStatus === 'UNMATCHED_EXTERNAL') {
+                        matchBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-800">UNMATCHED_EXTERNAL (Thiếu nội bộ)</span>`;
+                    } else if (item.matchStatus === 'UNMATCHED_INTERNAL') {
+                        matchBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800">UNMATCHED_INTERNAL (Sàn chưa thanh toán)</span>`;
+                    } else {
+                        matchBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-800">${item.matchStatus}</span>`;
+                    }
+
+                    let resolutionBadge = "";
+                    if (item.resolutionStatus === 'RESOLVED') {
+                        resolutionBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">RESOLVED (${item.resolvedBy || 'Hệ thống'})</span>`;
+                    } else if (item.resolutionStatus === 'PENDING') {
+                        resolutionBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">CHỜ KẾ TOÁN DUYỆT</span>`;
+                    } else {
+                        resolutionBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">${item.resolutionStatus}</span>`;
+                    }
+
+                    const canResolve = item.resolutionStatus === 'PENDING';
+                    const actionBtn = canResolve
+                        ? `<button onclick="resolveDiscrepancyItem('${item.id}', '${item.externalOrderId}')" class="px-2.5 py-1 text-[11px] font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded shadow-sm flex items-center space-x-1 mx-auto">
+                             <i class="ph ph-check"></i>
+                             <span>Duyệt Xử Lý</span>
+                           </button>`
+                        : `<span class="text-[11px] text-slate-400 italic">Đã hoàn tất</span>`;
+
+                    return `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="py-3 px-4">
+                                <div class="font-mono font-bold text-slate-900">${item.externalOrderId}</div>
+                                ${item.internalOrderId ? `<div class="text-[10px] text-slate-500 font-mono">Nội bộ: ${item.internalOrderId}</div>` : ''}
+                                ${item.resolutionNotes ? `<div class="text-[10px] text-indigo-600 mt-0.5 italic">Ghi chú: ${item.resolutionNotes}</div>` : ''}
+                            </td>
+                            <td class="py-3 px-4 text-right font-mono text-slate-800">${formatCurrency(item.externalAmount)}</td>
+                            <td class="py-3 px-4 text-right font-mono text-slate-800">${formatCurrency(item.internalAmount)}</td>
+                            <td class="py-3 px-4 text-right font-mono font-bold ${Math.abs(item.discrepancyAmount) > 0 ? 'text-rose-600' : 'text-emerald-600'}">
+                                ${formatCurrency(item.discrepancyAmount)}
+                            </td>
+                            <td class="py-3 px-4 text-center">${matchBadge}</td>
+                            <td class="py-3 px-4 text-center">${resolutionBadge}</td>
+                            <td class="py-3 px-4 text-center">${actionBtn}</td>
+                        </tr>
+                    `;
+                }).join("");
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="7" class="py-4 text-center text-rose-500">${err.message}</td></tr>`;
+            }
+        }
+
+        async function resolveDiscrepancyItem(itemId, txId) {
+            const reason = prompt(`Xác nhận duyệt xử lý chênh lệch cho giao dịch [${txId}]:\nNhập ghi chú / lý do phê duyệt bù trừ kế toán:`, "Chấp thuận bù trừ chi phí voucher/khuyến mãi của sàn");
+            if (!reason) return;
+
+            try {
+                const res = await fetch(`/api/v1/reconciliation/items/${itemId}/resolve`, {
+                    method: "POST",
+                    headers: {
+                        ...getHeaders(),
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        notes: reason,
+                        performedBy: currentUsername
+                    })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || "Xử lý chênh lệch thất bại");
+
+                showToast(`Đã phê duyệt xử lý chênh lệch cho đơn ${txId}!`, "success");
+                loadBatchItems(currentSelectedBatchId, "");
+                loadReconciliationBatches();
+            } catch (err) {
+                showToast(err.message, "error");
+            }
+        }
+
         // Init on page load
         window.addEventListener("DOMContentLoaded", () => {
+            loadReconciliationBatches();
             loadStuckInvoices();
             loadWebhookLogs();
             loadInvoices();

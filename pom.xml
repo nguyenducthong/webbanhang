@@ -22,6 +22,7 @@
         <module>fashion-infrastructure</module>
         <module>fashion-finance</module>
         <module>fashion-einvoice</module>
+        <module>fashion-reconciliation</module>
         <module>fashion-app</module>
     </modules>
 
@@ -56,6 +57,11 @@
             <dependency>
                 <groupId>com.fashion.platform</groupId>
                 <artifactId>fashion-einvoice</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fashion.platform</groupId>
+                <artifactId>fashion-reconciliation</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

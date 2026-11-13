@@ -17,6 +17,8 @@ public interface FinanceTransactionRepository extends JpaRepository<FinanceTrans
     Optional<FinanceTransaction> findByLegalEntityIdAndSourceTypeAndSourceIdAndTransactionType(
             UUID legalEntityId, String sourceType, String sourceId, FinanceTransactionType transactionType);
 
+    Optional<FinanceTransaction> findFirstByLegalEntityIdAndSourceId(UUID legalEntityId, String sourceId);
+
     boolean existsByLegalEntityIdAndSourceTypeAndSourceIdAndTransactionType(
             UUID legalEntityId, String sourceType, String sourceId, FinanceTransactionType transactionType);
 
