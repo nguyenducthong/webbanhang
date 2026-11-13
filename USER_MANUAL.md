@@ -17,35 +17,44 @@ Hệ thống được tích hợp sẵn giao diện Web Portal trực quan phụ
 
 ---
 
-## 2. Hướng dẫn Thao tác Từng Phân Hệ (Sprints 1 -> 6)
+## 2. Hướng dẫn Thao tác Từng Phân Hệ (Sprints 1 -> 8)
 
-### ⚖️ Phân hệ 1: Đối soát & Khớp Lệnh Sàn TMĐT (Sprint 7)
+### ⚖️ Phân hệ 1: Đối soát Sàn TMĐT & Đơn Vị Vận Chuyển COD (Sprint 7 & Sprint 8)
 
-> Hệ thống phân tích dữ liệu sao kê quyết toán sàn TMĐT (Shopee, TikTok Shop, Ngân hàng, COD), thuật toán khớp tự động (Matching Engine) và hàng đợi xử lý ngoại lệ (Exception Queue).
+> Hệ thống phân tích dữ liệu sao kê quyết toán đa kênh (**Shopee Pay, TikTok Shop, Giao Hàng Nhanh COD, ViettelPost**), thuật toán khớp tự động (Matching Engine), hàng đợi xử lý ngoại lệ (Exception Queue) và **Báo cáo Biến động Độ lệch Phí Sàn (Fee Variance Report)**.
 
 1. **Xem Bảng Thống Kê KPI Đối Soát**:
-   - Chọn menu bên trái: **"Đối soát & Khớp lệnh Sàn (S7)"**.
+   - Chọn menu bên trái: **"Đối soát Sàn & COD (S7 & S8)"**.
    - Thẻ thống kê thời gian thực hiển thị:
      - **Tỷ lệ Khớp Tự động (%)**: Tỷ lệ đơn hàng khớp chính xác cả mã đơn và số tiền thực nhận (`EXACT_MATCH`).
      - **Số Đơn Khớp Hoàn Toàn**: Các đơn có chênh lệch `<= 0.0001 VND` được đánh dấu `RESOLVED` tự động.
-     - **Số Đơn Phát Hiện Lệch**: Đơn bị chênh lệch phí sàn (`FEE_MISMATCH`) hoặc sàn có mà nội bộ thiếu (`MISSING_INTERNAL`).
+     - **Số Đơn Phát Hiện Lệch**: Đơn bị chênh lệch phí sàn (`FEE_MISMATCH`) hoặc sàn có mà nội bộ thiếu (`UNMATCHED_EXTERNAL`).
      - **Tổng Giá Trị Tiền Lệch**: Tổng số tiền chênh lệch cần Kế toán trưởng phê duyệt bù trừ hoặc khiếu nại sàn.
-2. **Nạp Sao Kê Quyết Toán (CSV Ingestion)**:
-   - Hệ thống hỗ trợ đọc file sao kê quyết toán từ Shopee, TikTok Shop, Vietcombank, Giao Hàng Nhanh / ViettelPost COD.
-   - Nhấn nút **"Nạp Mẫu Sao Kê Shopee"**: Hệ thống tự động điền mẫu dữ liệu quyết toán Shopee hợp lệ gồm:
-     - Đơn `SP-20261113-001`: Khớp 100% với đơn nội bộ (450.000đ).
-     - Đơn `SP-20261113-002`: Sàn báo thực nhận 605.000đ, nhưng hệ thống ghi nhận 620.000đ (Lệch phí sàn 15.000đ).
-     - Đơn `SP-20261113-999`: Sàn báo thanh toán 280.000đ nhưng nội bộ chưa ghi nhận đơn hàng.
-   - Nhấn nút **"Khởi Chạy Đối Soát & Khớp Lệnh"**: Hệ thống chạy thuật toán băm SHA-256 chống nạp trùng file, bóc tách dữ liệu CSV, đối chiếu với `finance_transactions` và phân loại kết quả.
+2. **Nạp Sao Kê Quyết Toán Đa Kênh (CSV Ingestion)**:
+   - Hệ thống cung cấp sẵn 3 nút nạp dữ liệu mẫu thực tế:
+     - 🟠 **Mẫu Shopee**: Bóc tách báo cáo ví Shopee Pay (`order_sn`, `payout_amount`, `fee`, `payout_date`).
+     - ⚫ **Mẫu TikTok Shop (Sprint 8)**: Bóc tách cơ cấu quyết toán đa thành phần gồm: Tiền khách trả, Trợ giá voucher sàn, Chiết khấu voucher shop, Phí hoa hồng nền tảng (Commission), Phí xử lý thanh toán và Phí tiếp thị liên kết (Affiliate).
+     - 🟢 **Mẫu COD GHN (Sprint 8)**: Bóc tách sao kê chuyển khoản tiền thu hộ COD từ Giao Hàng Nhanh (`waybill_code`, `order_code`, `cod_amount`, `shipping_fee`, `insurance_fee`, `return_fee`, `net_payout`).
+   - Nhấn nút **"Khởi Chạy Đối Soát & Khớp Lệnh"**: Hệ thống tự động nhận diện Parser tương ứng theo kênh, bóc tách dòng chi tiết và đối chiếu mã đơn với `finance_transactions`.
 3. **Quản Lý Danh Sách Đợt Đối Soát (Batches)**:
-   - Danh sách bảng đợt đối soát hiển thị Mã đợt (VD: `REC-SP-20261113-01`), Tên tệp, Kênh bán, Tiến độ khớp (thanh phần trăm trực quan), Tổng tiền sàn báo và Trạng thái đợt (`COMPLETED`, `DISCREPANCY_DETECTED`).
-   - Nhấn nút **"Chi tiết"** trên bất kỳ dòng đợt nào để tải bảng chi tiết bên dưới.
+   - Danh sách bảng đợt đối soát hiển thị Mã đợt (VD: `REC-SP-...`, `REC-TT-...`, `REC-COD-...`), Tên tệp, Kênh bán, Tiến độ khớp (thanh phần trăm trực quan), Tổng tiền sàn báo và Trạng thái đợt (`COMPLETED`, `DISCREPANCY_FOUND`).
+   - Nhấn nút **"Chi tiết"** trên bất kỳ dòng đợt nào để tải bảng chi tiết các đơn hàng bên dưới.
 4. **Phê Duyệt Xử Lý Chênh Lệch (Exception Resolution Queue)**:
    - Kế toán viên / Kế toán trưởng kiểm tra bảng **"Chi Tiết Các Dòng Đối Soát"**.
    - Các dòng có trạng thái `CHỜ KẾ TOÁN DUYỆT` (PENDING) sẽ hiển thị nút màu xanh **"Duyệt Xử Lý"**.
-   - Nhấn **"Duyệt Xử Lý"** -> Nhập lý do phê duyệt (VD: *"Chấp thuận bù trừ chi phí voucher sàn tháng 11"* hoặc *"Xác nhận ghi nhận chi phí quảng cáo Shopee Ads"*).
+   - Nhấn **"Duyệt Xử Lý"** -> Nhập lý do phê duyệt (VD: *"Chấp thuận bù trừ chi phí voucher sàn tháng 11"* hoặc *"Xác nhận ghi nhận cước vận chuyển vượt cân nặng"*).
    - Hệ thống cập nhật trạng thái dòng thành `RESOLVED`, lưu người duyệt (`performedBy`) và thời gian duyệt.
    - Khi tất cả các dòng bất thường trong đợt đã được duyệt xử lý, đợt đối soát sẽ tự động chuyển trạng thái sang **`COMPLETED`**.
+5. **Báo Cáo Biến Động Độ Lệch Phí Sàn (Marketplace Fee Variance Report - Sprint 8)**:
+   - Nằm ngay dưới bảng chi tiết đối soát.
+   - Bảng tổng hợp đối soát chi phí từng kênh so với biểu phí hợp đồng:
+     - **Shopee**: Biểu phí chuẩn 7.5%
+     - **TikTok Shop**: Biểu phí chuẩn 8.5%
+     - **COD GHN**: Biểu phí chuẩn 3.0%
+   - Cột **"Tỷ Lệ Phí (Thực Tế vs Chuẩn)"**: Tính toán tỷ lệ phần trăm thực tế sàn thu trên doanh thu gộp.
+   - Cột **"Đánh Giá"**:
+     - `NORMAL` (Màu xanh): Tỷ lệ phí thực tế bám sát hợp đồng (chênh lệch `<= 1%`).
+     - `HIGH_VARIANCE` (Cảnh báo màu đỏ): Tỷ lệ phí thực tế vượt ngưỡng (chênh lệch `> 1%`). Hệ thống tự động đưa ra khuyến nghị kiểm tra lại việc sàn trừ nhầm cước vượt cân hoặc tính trùng voucher.
 
 ---
 

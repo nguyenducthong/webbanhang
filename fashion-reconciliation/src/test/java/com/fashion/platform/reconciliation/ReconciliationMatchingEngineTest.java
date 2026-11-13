@@ -19,6 +19,7 @@ import org.mockito.Mockito;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -43,7 +44,7 @@ class ReconciliationMatchingEngineTest {
                 batchRepository,
                 legalEntityRepository,
                 financeTransactionRepository,
-                new ShopeeSettlementCsvParser()
+                List.of(new ShopeeSettlementCsvParser())
         );
     }
 

@@ -33,7 +33,7 @@ public class ReconciliationMatchingService {
     private final ReconciliationBatchRepository batchRepository;
     private final LegalEntityRepository legalEntityRepository;
     private final FinanceTransactionRepository financeTransactionRepository;
-    private final ReconciliationParser shopeeSettlementParser;
+    private final List<ReconciliationParser> parsers;
 
     @Transactional
     public ReconciliationBatch processSettlementFile(
@@ -43,7 +43,7 @@ public class ReconciliationMatchingService {
             byte[] fileBytes,
             String performedBy
     ) {
-        log.info("Starting reconciliation settlement process for entity {}, file {}", legalEntityId, fileName);
+        log.info("Starting reconciliation settlement process for entity {}, file {}, source {}", legalEntityId, fileName, sourceType);
 
         LegalEntity legalEntity = legalEntityRepository.findById(legalEntityId)
                 .orElseThrow(() -> new IllegalArgumentException("Legal entity not found: " + legalEntityId));
@@ -72,10 +72,15 @@ public class ReconciliationMatchingService {
                 .createdBy(performedBy)
                 .build();
 
-        // 2. Parse file CSV
+        // 2. Tìm Parser phù hợp và phân tích cú pháp
+        ReconciliationParser parser = parsers.stream()
+                .filter(p -> p.supports(sourceType))
+                .findFirst()
+                .orElseThrow(() -> new UnsupportedOperationException("Chưa hỗ trợ định dạng sao kê cho kênh: " + sourceType));
+
         List<ParsedTransaction> parsedRows;
         try (InputStream is = new ByteArrayInputStream(fileBytes)) {
-            parsedRows = shopeeSettlementParser.parse(is);
+            parsedRows = parser.parse(is);
         } catch (Exception e) {
             log.error("Failed to parse settlement file: {}", e.getMessage());
             batch.setStatus(BatchStatus.DISCREPANCY_FOUND);

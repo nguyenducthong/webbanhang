@@ -1,10 +1,12 @@
 package com.fashion.platform.reconciliation.api.controller;
 
 import com.fashion.platform.common.security.SecurityContextHelper;
+import com.fashion.platform.reconciliation.api.dto.FeeVarianceReportResponse;
 import com.fashion.platform.reconciliation.api.dto.ReconciliationBatchResponse;
 import com.fashion.platform.reconciliation.api.dto.ReconciliationItemResponse;
 import com.fashion.platform.reconciliation.api.dto.ResolveItemRequest;
 import com.fashion.platform.reconciliation.application.service.ReconciliationMatchingService;
+import com.fashion.platform.reconciliation.application.service.ReconciliationReportService;
 import com.fashion.platform.reconciliation.application.service.ReconciliationResolutionService;
 import com.fashion.platform.reconciliation.domain.model.ReconciliationBatch;
 import com.fashion.platform.reconciliation.domain.model.ReconciliationItem;
@@ -31,6 +33,7 @@ public class ReconciliationController {
 
     private final ReconciliationMatchingService matchingService;
     private final ReconciliationResolutionService resolutionService;
+    private final ReconciliationReportService reportService;
     private final ReconciliationBatchRepository batchRepository;
     private final ReconciliationItemRepository itemRepository;
 
@@ -109,5 +112,12 @@ public class ReconciliationController {
         String notes = request != null && request.getNotes() != null ? request.getNotes() : "Đã chấp nhận chênh lệch và điều chỉnh phí";
         ReconciliationItem item = resolutionService.resolveDiscrepancy(itemId, notes, currentUser);
         return ResponseEntity.ok(ReconciliationItemResponse.fromEntity(item));
+    }
+
+    @GetMapping("/reports/variance")
+    public ResponseEntity<List<FeeVarianceReportResponse>> getFeeVarianceReport(
+            @RequestParam("legalEntityId") UUID legalEntityId) {
+        List<FeeVarianceReportResponse> report = reportService.generateFeeVarianceReport(legalEntityId);
+        return ResponseEntity.ok(report);
     }
 }

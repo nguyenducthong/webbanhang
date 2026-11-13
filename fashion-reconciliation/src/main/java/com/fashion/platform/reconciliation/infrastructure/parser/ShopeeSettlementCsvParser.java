@@ -1,5 +1,6 @@
 package com.fashion.platform.reconciliation.infrastructure.parser;
 
+import com.fashion.platform.reconciliation.domain.model.ReconciliationSourceType;
 import com.fashion.platform.reconciliation.domain.parser.ParsedTransaction;
 import com.fashion.platform.reconciliation.domain.parser.ReconciliationParser;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +17,11 @@ import java.util.List;
 @Component("shopeeSettlementParser")
 @Slf4j
 public class ShopeeSettlementCsvParser implements ReconciliationParser {
+
+    @Override
+    public boolean supports(ReconciliationSourceType type) {
+        return type == ReconciliationSourceType.SHOPEE;
+    }
 
     @Override
     public List<ParsedTransaction> parse(InputStream inputStream) {

@@ -266,6 +266,120 @@ public class DemoDataLoader implements ApplicationRunner {
             reconciliationItemRepository.save(item2);
             reconciliationItemRepository.save(item3);
             log.info("Initialized DEMO Reconciliation Batch: REC-SP-20261113-01 with 3 items");
+
+            // Seed Sample Finance Transaction for TikTok Shop
+            FinanceTransaction txTikTok = FinanceTransaction.builder()
+                    .legalEntity(demo)
+                    .transactionCode("TX-TIKTOK-001")
+                    .transactionType(FinanceTransactionType.SALE_ORDER)
+                    .sourceType("TIKTOK_ORDER")
+                    .sourceId("TT-20261113-001")
+                    .channel(TransactionChannel.TIKTOK)
+                    .amount(new BigDecimal("647500.0000"))
+                    .currencyCode("VND")
+                    .occurredAt(Instant.now().minusSeconds(21600))
+                    .status(FinanceTransactionStatus.CONFIRMED)
+                    .description("Đơn hàng TikTok Shop Đầm Dạ Hội Lụa TT-20261113-001")
+                    .metadata("{\"buyer\":\"le_thi_c\"}")
+                    .build();
+            financeTransactionRepository.save(txTikTok);
+
+            // Seed TikTok Reconciliation Batch (Sprint 8)
+            ReconciliationBatch tiktokBatch = ReconciliationBatch.builder()
+                    .legalEntity(demo)
+                    .batchCode("REC-TT-20261113-01")
+                    .sourceType(ReconciliationSourceType.TIKTOK)
+                    .status(BatchStatus.COMPLETED)
+                    .fileName("TikTok_Settlement_20261113.csv")
+                    .totalRecords(1)
+                    .matchedRecords(1)
+                    .discrepancyRecords(0)
+                    .totalAmountExternal(new BigDecimal("647500.0000"))
+                    .totalAmountInternal(new BigDecimal("647500.0000"))
+                    .notes("Đợt đối soát TikTok Shop tự động: Khớp 100% doanh thu và phí hoa hồng sàn.")
+                    .build();
+            reconciliationBatchRepository.save(tiktokBatch);
+
+            ReconciliationItem ttItem = ReconciliationItem.builder()
+                    .batch(tiktokBatch)
+                    .externalOrderId("TT-20261113-001")
+                    .internalOrderId(txTikTok.getSourceId())
+                    .externalAmount(new BigDecimal("647500.0000"))
+                    .internalAmount(new BigDecimal("647500.0000"))
+                    .discrepancyAmount(BigDecimal.ZERO)
+                    .feeExternal(new BigDecimal("72500.0000"))
+                    .feeInternal(new BigDecimal("72500.0000"))
+                    .matchStatus(MatchStatus.EXACT_MATCH)
+                    .resolutionStatus(ResolutionStatus.RESOLVED)
+                    .resolvedBy("SYSTEM")
+                    .resolutionNotes("Tự động khớp chính xác với ví TikTok Shop")
+                    .build();
+            reconciliationItemRepository.save(ttItem);
+
+            // Seed Sample Finance Transaction for COD GHN
+            FinanceTransaction txCod = FinanceTransaction.builder()
+                    .legalEntity(demo)
+                    .transactionCode("TX-COD-001")
+                    .transactionType(FinanceTransactionType.SALE_ORDER)
+                    .sourceType("COD_SHIPMENT")
+                    .sourceId("GHN-VN-889922")
+                    .channel(TransactionChannel.OFFLINE)
+                    .amount(new BigDecimal("810000.0000"))
+                    .currencyCode("VND")
+                    .occurredAt(Instant.now().minusSeconds(10800))
+                    .status(FinanceTransactionStatus.CONFIRMED)
+                    .description("Đơn COD Giao Hàng Nhanh - Thu hộ tiền mặt GHN-VN-889922")
+                    .metadata("{\"carrier\":\"GHN\"}")
+                    .build();
+            financeTransactionRepository.save(txCod);
+
+            // Seed COD Carrier Reconciliation Batch (Sprint 8)
+            ReconciliationBatch codBatch = ReconciliationBatch.builder()
+                    .legalEntity(demo)
+                    .batchCode("REC-COD-20261113-01")
+                    .sourceType(ReconciliationSourceType.COD)
+                    .status(BatchStatus.DISCREPANCY_FOUND)
+                    .fileName("GHN_COD_Settlement_20261113.csv")
+                    .totalRecords(2)
+                    .matchedRecords(1)
+                    .discrepancyRecords(1)
+                    .totalAmountExternal(new BigDecimal("1085000.0000"))
+                    .totalAmountInternal(new BigDecimal("810000.0000"))
+                    .notes("Đợt đối soát tiền thu hộ COD từ Giao Hàng Nhanh (GHN).")
+                    .build();
+            reconciliationBatchRepository.save(codBatch);
+
+            ReconciliationItem codItem1 = ReconciliationItem.builder()
+                    .batch(codBatch)
+                    .externalOrderId("GHN-VN-889922")
+                    .internalOrderId(txCod.getSourceId())
+                    .externalAmount(new BigDecimal("810000.0000"))
+                    .internalAmount(new BigDecimal("810000.0000"))
+                    .discrepancyAmount(BigDecimal.ZERO)
+                    .feeExternal(new BigDecimal("40000.0000"))
+                    .feeInternal(new BigDecimal("40000.0000"))
+                    .matchStatus(MatchStatus.EXACT_MATCH)
+                    .resolutionStatus(ResolutionStatus.RESOLVED)
+                    .resolvedBy("SYSTEM")
+                    .resolutionNotes("ĐVVC đã chuyển khoản đúng số tiền thu hộ trừ cước vận chuyển")
+                    .build();
+
+            ReconciliationItem codItem2 = ReconciliationItem.builder()
+                    .batch(codBatch)
+                    .externalOrderId("GHN-VN-889923")
+                    .externalAmount(new BigDecimal("275000.0000"))
+                    .internalAmount(BigDecimal.ZERO)
+                    .discrepancyAmount(new BigDecimal("275000.0000"))
+                    .feeExternal(new BigDecimal("25000.0000"))
+                    .feeInternal(BigDecimal.ZERO)
+                    .matchStatus(MatchStatus.UNMATCHED_EXTERNAL)
+                    .resolutionStatus(ResolutionStatus.PENDING)
+                    .resolutionNotes("Đơn COD chuyển khoản ngoài danh sách vận đơn nội bộ")
+                    .build();
+
+            reconciliationItemRepository.save(codItem1);
+            reconciliationItemRepository.save(codItem2);
+            log.info("Initialized DEMO TikTok & COD Carrier Reconciliation Batches for Sprint 8");
         }
     }
 }
