@@ -53,10 +53,15 @@
             <nav class="space-y-1 bg-white p-3 rounded-xl border border-slate-200 shadow-sm sticky top-24">
                 <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-3 pt-2 pb-1">Các Phân Hệ (Sprints)</div>
                 
-                <button onclick="switchTab('tab-reconciliation')" id="nav-reconciliation" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all bg-indigo-50 text-indigo-700">
+                <button onclick="switchTab('tab-pos-bank')" id="nav-pos-bank" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all bg-indigo-50 text-indigo-700">
+                    <i class="ph ph-cash-register text-lg"></i>
+                    <span>Đóng Ca POS & Ngân Hàng (S9)</span>
+                    <span class="ml-auto text-[10px] bg-indigo-200 text-indigo-800 px-1.5 py-0.5 rounded font-bold">Mới</span>
+                </button>
+
+                <button onclick="switchTab('tab-reconciliation')" id="nav-reconciliation" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all">
                     <i class="ph ph-scales text-lg"></i>
                     <span>Đối soát Sàn & COD (S7 & S8)</span>
-                    <span class="ml-auto text-[10px] bg-indigo-200 text-indigo-800 px-1.5 py-0.5 rounded font-bold">Mới</span>
                 </button>
 
                 <button onclick="switchTab('tab-provider')" id="nav-provider" class="nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-all">
@@ -94,8 +99,236 @@
         <!-- Main Content Body -->
         <main class="flex-1 space-y-6">
 
-            <!-- TAB: RECONCILIATION CORE & MATCHING ENGINE (SPRINT 7) -->
-            <section id="tab-reconciliation" class="tab-content space-y-6">
+            <!-- TAB: POS SHIFT CLOSE & BANK RECONCILIATION (SPRINT 9) -->
+            <section id="tab-pos-bank" class="tab-content space-y-6">
+                <!-- Header Card -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900">Đóng Ca Thu Ngân POS & Đối Soát Ngân Hàng Điện Tử (Sprint 9)</h2>
+                        <p class="text-xs text-slate-500">Quy trình kiểm đếm két tiền mặt theo từng mệnh giá VND, đối chiếu Expected vs Counted Cash và đối soát sao kê Vietcombank</p>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="promptOpenNewShift()" class="flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-2 rounded-lg shadow-sm transition">
+                            <i class="ph ph-plus-circle text-base"></i>
+                            <span>Mở Ca Bán Hàng Mới</span>
+                        </button>
+                        <button onclick="loadPosShifts()" class="flex items-center space-x-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold px-3 py-2 rounded-lg border border-indigo-200 transition">
+                            <i class="ph ph-arrows-clockwise text-base"></i>
+                            <span>Làm mới Dữ liệu</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- POS Shift KPI Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-slate-500">Ca Đang Hoạt Động</span>
+                            <span class="p-1.5 rounded-lg bg-emerald-50 text-emerald-600"><i class="ph ph-storefront text-lg"></i></span>
+                        </div>
+                        <div class="text-2xl font-bold text-emerald-700" id="posKpiOpenCount">0</div>
+                        <div class="text-[11px] text-slate-400">Ca bán hàng đang mở tại quầy</div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-slate-500">Doanh Thu Ca Đã Chốt</span>
+                            <span class="p-1.5 rounded-lg bg-indigo-50 text-indigo-600"><i class="ph ph-currency-circle-dollar text-lg"></i></span>
+                        </div>
+                        <div class="text-2xl font-bold text-indigo-700" id="posKpiClosedRevenue">0 ₫</div>
+                        <div class="text-[11px] text-slate-400">Tiền mặt + Thẻ + QR trong ngày</div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-slate-500">Tỷ Lệ Két Cân Bằng</span>
+                            <span class="p-1.5 rounded-lg bg-sky-50 text-sky-600"><i class="ph ph-scales text-lg"></i></span>
+                        </div>
+                        <div class="text-2xl font-bold text-sky-600" id="posKpiBalancedRate">100%</div>
+                        <div class="text-[11px] text-emerald-600 font-medium">Tiền đếm khớp 100% két kỳ vọng</div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-medium text-slate-500">Chênh Lệch Két Tiền Mặt</span>
+                            <span class="p-1.5 rounded-lg bg-rose-50 text-rose-600"><i class="ph ph-warning text-lg"></i></span>
+                        </div>
+                        <div class="text-2xl font-bold text-rose-600" id="posKpiDiscrepancy">0 ₫</div>
+                        <div class="text-[11px] text-rose-500 font-medium">Thừa / Thiếu tiền mặt cuối ca</div>
+                    </div>
+                </div>
+
+                <!-- Live Cash Denomination Calculator & Shift Close Form -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <div class="flex items-center space-x-2">
+                            <div class="bg-emerald-100 text-emerald-700 p-2 rounded-lg">
+                                <i class="ph ph-cash-register text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900">Bảng Kê Kiểm Đếm Két Tiền Mặt & Chốt Ca (Cash Denomination Calculator)</h3>
+                                <p class="text-xs text-slate-500">Nhập số lượng từng mệnh giá tiền giấy trong két thu ngân, hệ thống tự động so khớp với doanh thu ca</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs font-medium text-slate-500">Chọn Ca Cần Chốt:</span>
+                            <select id="closeShiftSelect" onchange="onSelectShiftToClose()" class="text-xs border border-slate-300 rounded-lg p-1.5 bg-slate-50 font-semibold text-indigo-700 outline-none">
+                                <option value="">-- Đang tải danh sách ca mở --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Doanh thu ca -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Tiền Đầu Ca (Float)</label>
+                            <input id="shiftFloatAmount" type="text" value="0" readonly class="w-full text-xs font-mono font-bold bg-slate-200 text-slate-700 rounded p-2 border border-slate-300">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Doanh Thu Tiền Mặt (VND)</label>
+                            <input id="shiftCashSales" type="number" value="2500000" oninput="calculateCashDiscrepancy()" class="w-full text-xs font-mono font-bold bg-white text-slate-900 rounded p-2 border border-slate-300 focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Doanh Thu Quẹt Thẻ (POS)</label>
+                            <input id="shiftCardSales" type="number" value="1200000" class="w-full text-xs font-mono font-bold bg-white text-slate-900 rounded p-2 border border-slate-300">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Doanh Thu Chuyển Khoản QR</label>
+                            <input id="shiftQrSales" type="number" value="800000" class="w-full text-xs font-mono font-bold bg-white text-slate-900 rounded p-2 border border-slate-300">
+                        </div>
+                    </div>
+
+                    <!-- Mệnh giá tiền mặt -->
+                    <div class="space-y-2">
+                        <div class="text-xs font-bold text-slate-800 flex items-center justify-between">
+                            <span>Kiểm Đếm Tiền Mặt Thực Tế Theo Mệnh Giá (VND):</span>
+                            <span class="text-xs font-normal text-slate-500">Nhập số tờ của từng loại tiền có trong két</span>
+                        </div>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-center">
+                                <div class="text-xs font-bold text-slate-700">500.000 ₫</div>
+                                <input type="number" min="0" value="6" id="denom500" oninput="calculateCashDiscrepancy()" class="w-full mt-1.5 text-center text-xs font-mono font-bold p-1.5 border border-slate-300 rounded bg-white">
+                                <div class="text-[10px] text-slate-400 mt-1" id="subtotal500">3.000.000 ₫</div>
+                            </div>
+                            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-center">
+                                <div class="text-xs font-bold text-slate-700">200.000 ₫</div>
+                                <input type="number" min="0" value="3" id="denom200" oninput="calculateCashDiscrepancy()" class="w-full mt-1.5 text-center text-xs font-mono font-bold p-1.5 border border-slate-300 rounded bg-white">
+                                <div class="text-[10px] text-slate-400 mt-1" id="subtotal200">600.000 ₫</div>
+                            </div>
+                            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-center">
+                                <div class="text-xs font-bold text-slate-700">100.000 ₫</div>
+                                <input type="number" min="0" value="4" id="denom100" oninput="calculateCashDiscrepancy()" class="w-full mt-1.5 text-center text-xs font-mono font-bold p-1.5 border border-slate-300 rounded bg-white">
+                                <div class="text-[10px] text-slate-400 mt-1" id="subtotal100">400.000 ₫</div>
+                            </div>
+                            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-center">
+                                <div class="text-xs font-bold text-slate-700">50.000 ₫</div>
+                                <input type="number" min="0" value="0" id="denom50" oninput="calculateCashDiscrepancy()" class="w-full mt-1.5 text-center text-xs font-mono font-bold p-1.5 border border-slate-300 rounded bg-white">
+                                <div class="text-[10px] text-slate-400 mt-1" id="subtotal50">0 ₫</div>
+                            </div>
+                            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-center">
+                                <div class="text-xs font-bold text-slate-700">20.000 ₫</div>
+                                <input type="number" min="0" value="0" id="denom20" oninput="calculateCashDiscrepancy()" class="w-full mt-1.5 text-center text-xs font-mono font-bold p-1.5 border border-slate-300 rounded bg-white">
+                                <div class="text-[10px] text-slate-400 mt-1" id="subtotal20">0 ₫</div>
+                            </div>
+                            <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-center">
+                                <div class="text-xs font-bold text-slate-700">10.000 ₫</div>
+                                <input type="number" min="0" value="0" id="denom10" oninput="calculateCashDiscrepancy()" class="w-full mt-1.5 text-center text-xs font-mono font-bold p-1.5 border border-slate-300 rounded bg-white">
+                                <div class="text-[10px] text-slate-400 mt-1" id="subtotal10">0 ₫</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- So sánh và Nút chốt ca -->
+                    <div class="p-4 rounded-xl border border-slate-200 bg-slate-900 text-white flex flex-col md:flex-row items-center justify-between gap-4">
+                        <div class="flex items-center space-x-6">
+                            <div>
+                                <div class="text-[11px] text-slate-400 uppercase font-semibold">Tiền Đếm Thực Tế (Counted)</div>
+                                <div class="text-xl font-bold font-mono text-emerald-400" id="liveCountedCash">4.000.000 ₫</div>
+                            </div>
+                            <div class="text-slate-600 font-bold text-lg">vs</div>
+                            <div>
+                                <div class="text-[11px] text-slate-400 uppercase font-semibold">Két Kỳ Vọng (Expected)</div>
+                                <div class="text-xl font-bold font-mono text-slate-200" id="liveExpectedCash">4.000.000 ₫</div>
+                            </div>
+                            <div class="text-slate-600 font-bold text-lg">=</div>
+                            <div>
+                                <div class="text-[11px] text-slate-400 uppercase font-semibold">Chênh Lệch Két</div>
+                                <div class="text-xl font-bold font-mono text-emerald-400" id="liveCashDiff">0 ₫ (Cân bằng 100%)</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3 w-full md:w-auto">
+                            <input id="shiftCloseNotes" type="text" placeholder="Ghi chú chốt ca / lý do lệch két..." class="text-xs bg-slate-800 text-slate-200 border border-slate-700 rounded-lg p-2.5 outline-none focus:ring-1 focus:ring-emerald-500 w-full md:w-64">
+                            <button onclick="submitCloseShift()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs py-2.5 px-5 rounded-lg shadow transition whitespace-nowrap">
+                                Xác Nhận Chốt Ca
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- POS Shifts History Table -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900">Lịch Sử Các Ca Bán Hàng Tại Cửa Hàng (POS Shifts History)</h3>
+                            <p class="text-xs text-slate-500">Theo dõi trạng thái đóng/mở ca, người thu ngân và kết quả kiểm đếm két</p>
+                        </div>
+                        <span id="posShiftCountBadge" class="text-xs bg-slate-100 text-slate-600 font-semibold px-2 py-0.5 rounded-full">0 ca</span>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase font-semibold">
+                                <tr>
+                                    <th class="py-3 px-4">Mã Ca / Cửa Hàng</th>
+                                    <th class="py-3 px-4">Thu Ngân</th>
+                                    <th class="py-3 px-4">Thời Gian Mở / Đóng</th>
+                                    <th class="py-3 px-4 text-right">Tiền Đầu Ca</th>
+                                    <th class="py-3 px-4 text-right">Doanh Thu Tiền Mặt</th>
+                                    <th class="py-3 px-4 text-right">Két Kỳ Vọng</th>
+                                    <th class="py-3 px-4 text-right">Tiền Đếm Thực Tế</th>
+                                    <th class="py-3 px-4 text-right">Chênh Lệch</th>
+                                    <th class="py-3 px-4 text-center">Trạng Thái</th>
+                                    <th class="py-3 px-4 text-center">Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="posShiftsBody" class="divide-y divide-slate-100">
+                                <tr><td colspan="10" class="py-8 text-center text-slate-400">Đang tải danh sách ca bán hàng...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Bank Statement Reconciliation Section (Vietcombank & VietQR) -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <div class="flex items-center space-x-2">
+                            <div class="bg-sky-100 text-sky-700 p-2 rounded-lg">
+                                <i class="ph ph-bank text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900">Đối Soát Sao Kê Ngân Hàng Vietcombank & VietQR (Bank Statement Matching)</h3>
+                                <p class="text-xs text-slate-500">Phân tích sao kê tài khoản ngân hàng doanh nghiệp, tự động bóc tách mã đơn hàng từ nội dung chuyển khoản</p>
+                            </div>
+                        </div>
+                        <button onclick="fillVcbSampleCsv()" class="px-3 py-1.5 text-xs font-semibold bg-sky-50 hover:bg-sky-100 text-sky-700 rounded-lg border border-sky-200 transition flex items-center space-x-1">
+                            <i class="ph ph-magic-wand text-sm"></i>
+                            <span>Nạp Mẫu Sao Kê Vietcombank</span>
+                        </button>
+                    </div>
+
+                    <div class="p-3 bg-sky-50/50 rounded-lg border border-sky-100 flex items-center justify-between">
+                        <div class="text-xs text-sky-900">
+                            <strong>Gợi ý:</strong> Bạn có thể nạp sao kê ngân hàng VCB trực tiếp tại đây hoặc chuyển sang Tab <em>"Đối soát Sàn & COD"</em> chọn kênh <strong>Vietcombank Bank Statement</strong>.
+                        </div>
+                        <button onclick="switchTab('tab-reconciliation')" class="px-3 py-1.5 text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white rounded-lg shadow-sm transition">
+                            Mở Bộ Đối Soát Chi Tiết
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: RECONCILIATION CORE & MATCHING ENGINE (SPRINT 7 & 8) -->
+            <section id="tab-reconciliation" class="tab-content space-y-6 hidden">
                 <!-- Header Card -->
                 <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
                     <div>
@@ -804,6 +1037,7 @@
                 activeNav.className = "nav-item w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all bg-indigo-50 text-indigo-700";
             }
 
+            if (tabId === "tab-pos-bank") loadPosShifts();
             if (tabId === "tab-reconciliation") { loadReconciliationBatches(); loadFeeVarianceReport(); }
             if (tabId === "tab-provider") { loadStuckInvoices(); loadWebhookLogs(); }
             if (tabId === "tab-einvoice") loadInvoices();
@@ -1461,8 +1695,296 @@ GHN-VN-889923,,300000,25000,0,0,275000`;
             }
         }
 
+        // --- SPRINT 9: POS SHIFTS & CASH COUNT LOGIC ---
+        let posShiftsList = [];
+
+        async function loadPosShifts() {
+            if (!defaultLegalEntityId) await fetchDefaultLegalEntity();
+            const tbody = document.getElementById("posShiftsBody");
+            try {
+                const res = await fetch(`/api/v1/pos/shifts?legalEntityId=${defaultLegalEntityId}`, { headers: getHeaders() });
+                const shifts = await res.json();
+                posShiftsList = shifts || [];
+
+                if (posShiftsList.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="10" class="py-8 text-center text-slate-400 font-sans">Chưa có ca bán hàng nào. Nhấn "Mở Ca Bán Hàng Mới" để bắt đầu.</td></tr>`;
+                    document.getElementById("posShiftCountBadge").innerText = "0 ca";
+                    return;
+                }
+
+                document.getElementById("posShiftCountBadge").innerText = `${posShiftsList.length} ca`;
+
+                // Calculate KPIs
+                let openCount = 0;
+                let closedRevenue = 0;
+                let balancedCount = 0;
+                let totalClosed = 0;
+                let totalDiscrepancy = 0;
+
+                posShiftsList.forEach(s => {
+                    if (s.status === 'OPEN') {
+                        openCount++;
+                    } else if (s.status === 'CLOSED') {
+                        totalClosed++;
+                        closedRevenue += (Number(s.totalCashSales || 0) + Number(s.totalCardSales || 0) + Number(s.totalQrSales || 0));
+                        totalDiscrepancy += Math.abs(Number(s.differenceAmount || 0));
+                        if (Math.abs(Number(s.differenceAmount || 0)) === 0) {
+                            balancedCount++;
+                        }
+                    }
+                });
+
+                document.getElementById("posKpiOpenCount").innerText = openCount;
+                document.getElementById("posKpiClosedRevenue").innerText = formatCurrency(closedRevenue);
+                document.getElementById("posKpiBalancedRate").innerText = totalClosed > 0 ? Math.round((balancedCount / totalClosed) * 100) + "%" : "100%";
+                document.getElementById("posKpiDiscrepancy").innerText = formatCurrency(totalDiscrepancy);
+
+                // Update Shift Selector in Close Form
+                const selectEl = document.getElementById("closeShiftSelect");
+                const openShifts = posShiftsList.filter(s => s.status === 'OPEN');
+                if (openShifts.length === 0) {
+                    selectEl.innerHTML = `<option value="">-- Không có ca mở (Tất cả đã đóng) --</option>`;
+                    document.getElementById("shiftFloatAmount").value = "0";
+                } else {
+                    selectEl.innerHTML = openShifts.map(s => `
+                        <option value="${s.id}">${s.shiftCode} (${s.storeCode} - ${s.cashierUsername})</option>
+                    `).join("");
+                    onSelectShiftToClose();
+                }
+
+                tbody.innerHTML = posShiftsList.map(s => {
+                    const isOpen = s.status === 'OPEN';
+                    const statusBadge = isOpen
+                        ? `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 animate-pulse">ĐANG MỞ</span>`
+                        : `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">ĐÃ ĐÓNG</span>`;
+
+                    const diffNum = Number(s.differenceAmount || 0);
+                    let diffText = "—";
+                    if (!isOpen) {
+                        if (diffNum === 0) {
+                            diffText = `<span class="text-emerald-600 font-bold">0 ₫ (Khớp)</span>`;
+                        } else if (diffNum < 0) {
+                            diffText = `<span class="text-rose-600 font-bold">${formatCurrency(diffNum)} (Thiếu)</span>`;
+                        } else {
+                            diffText = `<span class="text-amber-600 font-bold">+${formatCurrency(diffNum)} (Thừa)</span>`;
+                        }
+                    }
+
+                    const actionBtn = isOpen
+                        ? `<button onclick="selectShiftToCloseById('${s.id}')" class="px-2.5 py-1 text-[11px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded shadow-sm">
+                             Chốt Ca
+                           </button>`
+                        : `<button onclick="viewShiftReceipt('${s.id}')" class="px-2.5 py-1 text-[11px] font-semibold bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded shadow-sm">
+                             Biên Bản
+                           </button>`;
+
+                    return `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="py-3 px-4">
+                                <div class="font-mono font-bold text-slate-900">${s.shiftCode}</div>
+                                <div class="text-[10px] text-slate-400 font-medium">${s.storeCode}</div>
+                            </td>
+                            <td class="py-3 px-4 font-semibold text-slate-800">${s.cashierUsername}</td>
+                            <td class="py-3 px-4 text-[11px] text-slate-500">
+                                <div>Mở: ${new Date(s.openedAt).toLocaleTimeString('vi-VN')}</div>
+                                ${s.closedAt ? `<div>Đóng: ${new Date(s.closedAt).toLocaleTimeString('vi-VN')}</div>` : '<div class="text-emerald-600 italic">Đang bán hàng...</div>'}
+                            </td>
+                            <td class="py-3 px-4 text-right font-mono text-slate-700">${formatCurrency(s.openingFloat)}</td>
+                            <td class="py-3 px-4 text-right font-mono font-semibold text-slate-900">${isOpen ? '—' : formatCurrency(s.totalCashSales)}</td>
+                            <td class="py-3 px-4 text-right font-mono text-slate-600">${isOpen ? '—' : formatCurrency(s.expectedCashAmount)}</td>
+                            <td class="py-3 px-4 text-right font-mono font-bold text-indigo-700">${isOpen ? '—' : formatCurrency(s.actualCountedCash)}</td>
+                            <td class="py-3 px-4 text-right font-mono">${diffText}</td>
+                            <td class="py-3 px-4 text-center">${statusBadge}</td>
+                            <td class="py-3 px-4 text-center">${actionBtn}</td>
+                        </tr>
+                    `;
+                }).join("");
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="10" class="py-4 text-center text-rose-500">${err.message}</td></tr>`;
+            }
+        }
+
+        function onSelectShiftToClose() {
+            const shiftId = document.getElementById("closeShiftSelect").value;
+            const shift = posShiftsList.find(s => s.id === shiftId);
+            if (shift) {
+                document.getElementById("shiftFloatAmount").value = shift.openingFloat || 0;
+            }
+            calculateCashDiscrepancy();
+        }
+
+        function selectShiftToCloseById(shiftId) {
+            document.getElementById("closeShiftSelect").value = shiftId;
+            onSelectShiftToClose();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            showToast("Đã chọn ca cần chốt trên bảng đếm tiền!", "success");
+        }
+
+        function calculateCashDiscrepancy() {
+            const d500 = (Number(document.getElementById("denom500").value) || 0) * 500000;
+            const d200 = (Number(document.getElementById("denom200").value) || 0) * 200000;
+            const d100 = (Number(document.getElementById("denom100").value) || 0) * 100000;
+            const d50 = (Number(document.getElementById("denom50").value) || 0) * 50000;
+            const d20 = (Number(document.getElementById("denom20").value) || 0) * 20000;
+            const d10 = (Number(document.getElementById("denom10").value) || 0) * 10000;
+
+            document.getElementById("subtotal500").innerText = formatCurrency(d500);
+            document.getElementById("subtotal200").innerText = formatCurrency(d200);
+            document.getElementById("subtotal100").innerText = formatCurrency(d100);
+            document.getElementById("subtotal50").innerText = formatCurrency(d50);
+            document.getElementById("subtotal20").innerText = formatCurrency(d20);
+            document.getElementById("subtotal10").innerText = formatCurrency(d10);
+
+            const totalCounted = d500 + d200 + d100 + d50 + d20 + d10;
+            const floatAmt = Number(document.getElementById("shiftFloatAmount").value) || 0;
+            const cashSales = Number(document.getElementById("shiftCashSales").value) || 0;
+            const expected = floatAmt + cashSales;
+            const diff = totalCounted - expected;
+
+            document.getElementById("liveCountedCash").innerText = formatCurrency(totalCounted);
+            document.getElementById("liveExpectedCash").innerText = formatCurrency(expected);
+
+            const diffEl = document.getElementById("liveCashDiff");
+            if (diff === 0) {
+                diffEl.innerText = "0 ₫ (Cân bằng 100%)";
+                diffEl.className = "text-xl font-bold font-mono text-emerald-400";
+            } else if (diff < 0) {
+                diffEl.innerText = `${formatCurrency(diff)} (Thiếu tiền két)`;
+                diffEl.className = "text-xl font-bold font-mono text-rose-400";
+            } else {
+                diffEl.innerText = `+${formatCurrency(diff)} (Thừa tiền két)`;
+                diffEl.className = "text-xl font-bold font-mono text-amber-400";
+            }
+        }
+
+        async function submitCloseShift() {
+            const shiftId = document.getElementById("closeShiftSelect").value;
+            if (!shiftId) {
+                showToast("Vui lòng chọn ca cần chốt!", "error");
+                return;
+            }
+
+            const cashSales = Number(document.getElementById("shiftCashSales").value) || 0;
+            const cardSales = Number(document.getElementById("shiftCardSales").value) || 0;
+            const qrSales = Number(document.getElementById("shiftQrSales").value) || 0;
+            const notes = document.getElementById("shiftCloseNotes").value.trim();
+
+            const cashCounts = [
+                { denomination: 500000, quantity: Number(document.getElementById("denom500").value) || 0 },
+                { denomination: 200000, quantity: Number(document.getElementById("denom200").value) || 0 },
+                { denomination: 100000, quantity: Number(document.getElementById("denom100").value) || 0 },
+                { denomination: 50000, quantity: Number(document.getElementById("denom50").value) || 0 },
+                { denomination: 20000, quantity: Number(document.getElementById("denom20").value) || 0 },
+                { denomination: 10000, quantity: Number(document.getElementById("denom10").value) || 0 }
+            ];
+
+            try {
+                const res = await fetch(`/api/v1/pos/shifts/${shiftId}/close`, {
+                    method: "POST",
+                    headers: {
+                        ...getHeaders(),
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        totalCashSales: cashSales,
+                        totalCardSales: cardSales,
+                        totalQrSales: qrSales,
+                        cashCounts: cashCounts,
+                        closingNotes: notes,
+                        performedBy: currentUsername
+                    })
+                });
+
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || "Chốt ca thất bại");
+
+                const diff = data.shift.differenceAmount;
+                const diffMsg = diff === 0 ? "Khớp két 100%" : (diff < 0 ? `Lệch thiếu ${formatCurrency(diff)}` : `Lệch thừa +${formatCurrency(diff)}`);
+                showToast(`Chốt ca thành công! ${data.shift.shiftCode}: ${diffMsg}`, "success");
+                loadPosShifts();
+            } catch (err) {
+                showToast(err.message, "error");
+            }
+        }
+
+        async function promptOpenNewShift() {
+            if (!defaultLegalEntityId) await fetchDefaultLegalEntity();
+            const store = prompt("Nhập mã cửa hàng:", "STORE-HCM-01");
+            if (!store) return;
+            const floatStr = prompt("Nhập số tiền đầu ca (Float tiền lẻ thối):", "2000000");
+            if (floatStr === null) return;
+
+            try {
+                const res = await fetch("/api/v1/pos/shifts/open", {
+                    method: "POST",
+                    headers: {
+                        ...getHeaders(),
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        legalEntityId: defaultLegalEntityId,
+                        storeCode: store,
+                        cashierUsername: currentUsername,
+                        openingFloat: Number(floatStr) || 0
+                    })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || "Mở ca thất bại");
+
+                showToast(`Đã mở ca bán hàng mới: ${data.shiftCode}!`, "success");
+                loadPosShifts();
+            } catch (err) {
+                showToast(err.message, "error");
+            }
+        }
+
+        async function viewShiftReceipt(shiftId) {
+            try {
+                const res = await fetch(`/api/v1/pos/shifts/${shiftId}`, { headers: getHeaders() });
+                const detail = await res.json();
+                const s = detail.shift;
+                let msg = `=== BIÊN BẢN BÀN GIAO CA THU NGÂN ===\n`;
+                msg += `Mã Ca: ${s.shiftCode} | Cửa Hàng: ${s.storeCode}\n`;
+                msg += `Thu Ngân: ${s.cashierUsername} | Người Duyệt: ${s.managerApprovedBy || 'N/A'}\n`;
+                msg += `Mở: ${new Date(s.openedAt).toLocaleString('vi-VN')}\n`;
+                msg += `Đóng: ${s.closedAt ? new Date(s.closedAt).toLocaleString('vi-VN') : 'Chưa đóng'}\n`;
+                msg += `--------------------------------------\n`;
+                msg += `Tiền Đầu Ca: ${formatCurrency(s.openingFloat)}\n`;
+                msg += `Doanh Thu Tiền Mặt: ${formatCurrency(s.totalCashSales)}\n`;
+                msg += `Doanh Thu Quẹt Thẻ: ${formatCurrency(s.totalCardSales)}\n`;
+                msg += `Doanh Thu Chuyển Khoản QR: ${formatCurrency(s.totalQrSales)}\n`;
+                msg += `--------------------------------------\n`;
+                msg += `Két Tiền Mặt Kỳ Vọng: ${formatCurrency(s.expectedCashAmount)}\n`;
+                msg += `Tiền Mặt Đếm Thực Tế: ${formatCurrency(s.actualCountedCash)}\n`;
+                msg += `Chênh Lệch Két: ${formatCurrency(s.differenceAmount)}\n`;
+                msg += `Ghi Chú: ${s.closingNotes || 'Không có'}\n`;
+                if (detail.cashCounts && detail.cashCounts.length > 0) {
+                    msg += `\nChi tiết mệnh giá:\n`;
+                    detail.cashCounts.forEach(c => {
+                        msg += `  ${formatCurrency(c.denomination)} x ${c.quantity} = ${formatCurrency(c.totalAmount)}\n`;
+                    });
+                }
+                alert(msg);
+            } catch (err) {
+                showToast(err.message, "error");
+            }
+        }
+
+        function fillVcbSampleCsv() {
+            switchTab("tab-reconciliation");
+            const sample = `transaction_id,booking_date,debit_amount,credit_amount,balance,description
+FT26111388991,2026-11-13 09:15:00,0,1250000,50000000,NGUYEN VAN A CHUYEN TIEN DH-20261113-888
+FT26111388992,2026-11-13 10:20:00,0,850000,50850000,VIETQR THANH TOAN DON HANG SP-20261113-001
+FT26111388993,2026-11-13 11:00:00,5500,0,50844500,PHI DUY TRI TAI KHOAN DOANH NGHIEP`;
+            document.getElementById("recCsvContent").value = sample;
+            document.getElementById("recFileName").value = "Vietcombank_Statement_" + new Date().toISOString().slice(0, 10).replace(/-/g, "") + ".csv";
+            document.getElementById("recSourceType").value = "BANK";
+            showToast("Đã nạp mẫu sao kê Vietcombank điện tử!", "success");
+        }
+
         // Init on page load
         window.addEventListener("DOMContentLoaded", () => {
+            loadPosShifts();
             loadReconciliationBatches();
             loadFeeVarianceReport();
             loadStuckInvoices();

@@ -14,6 +14,8 @@ import com.fashion.platform.finance.repository.FinanceTransactionRepository;
 import com.fashion.platform.finance.repository.LegalEntityRepository;
 import com.fashion.platform.finance.service.AccountingAccountService;
 import com.fashion.platform.reconciliation.domain.model.*;
+import com.fashion.platform.reconciliation.domain.repository.PosShiftCashCountRepository;
+import com.fashion.platform.reconciliation.domain.repository.PosShiftRepository;
 import com.fashion.platform.reconciliation.domain.repository.ReconciliationBatchRepository;
 import com.fashion.platform.reconciliation.domain.repository.ReconciliationItemRepository;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +44,8 @@ public class DemoDataLoader implements ApplicationRunner {
     private final FinanceTransactionRepository financeTransactionRepository;
     private final ReconciliationBatchRepository reconciliationBatchRepository;
     private final ReconciliationItemRepository reconciliationItemRepository;
+    private final PosShiftRepository posShiftRepository;
+    private final PosShiftCashCountRepository posShiftCashCountRepository;
 
     @Override
     public void run(ApplicationArguments args) {
@@ -380,6 +384,98 @@ public class DemoDataLoader implements ApplicationRunner {
             reconciliationItemRepository.save(codItem1);
             reconciliationItemRepository.save(codItem2);
             log.info("Initialized DEMO TikTok & COD Carrier Reconciliation Batches for Sprint 8");
+
+            // Seed Bank Statement Reconciliation Batch (Sprint 9)
+            ReconciliationBatch bankBatch = ReconciliationBatch.builder()
+                    .legalEntity(demo)
+                    .batchCode("REC-BANK-20261113-01")
+                    .sourceType(ReconciliationSourceType.BANK)
+                    .status(BatchStatus.COMPLETED)
+                    .fileName("Vietcombank_Statement_20261113.csv")
+                    .totalRecords(2)
+                    .matchedRecords(1)
+                    .discrepancyRecords(1)
+                    .totalAmountExternal(new BigDecimal("2100000.0000"))
+                    .totalAmountInternal(new BigDecimal("450000.0000"))
+                    .notes("Sao kê tài khoản ngân hàng VCB: Khớp giao dịch chuyển khoản VietQR đơn SP-20261113-001.")
+                    .build();
+            reconciliationBatchRepository.save(bankBatch);
+
+            ReconciliationItem bankItem1 = ReconciliationItem.builder()
+                    .batch(bankBatch)
+                    .externalOrderId("SP-20261113-001")
+                    .internalOrderId(tx1.getSourceId())
+                    .externalAmount(new BigDecimal("450000.0000"))
+                    .internalAmount(new BigDecimal("450000.0000"))
+                    .discrepancyAmount(BigDecimal.ZERO)
+                    .feeExternal(BigDecimal.ZERO)
+                    .feeInternal(BigDecimal.ZERO)
+                    .matchStatus(MatchStatus.EXACT_MATCH)
+                    .resolutionStatus(ResolutionStatus.RESOLVED)
+                    .resolvedBy("SYSTEM")
+                    .resolutionNotes("Khớp mã giao dịch chuyển khoản VietQR")
+                    .build();
+
+            ReconciliationItem bankItem2 = ReconciliationItem.builder()
+                    .batch(bankBatch)
+                    .externalOrderId("FT26111388991")
+                    .externalAmount(new BigDecimal("1650000.0000"))
+                    .internalAmount(BigDecimal.ZERO)
+                    .discrepancyAmount(new BigDecimal("1650000.0000"))
+                    .feeExternal(BigDecimal.ZERO)
+                    .feeInternal(BigDecimal.ZERO)
+                    .matchStatus(MatchStatus.UNMATCHED_EXTERNAL)
+                    .resolutionStatus(ResolutionStatus.PENDING)
+                    .resolutionNotes("Khoản thanh toán chuyển khoản khách hàng chưa gán mã đơn")
+                    .build();
+
+            reconciliationItemRepository.save(bankItem1);
+            reconciliationItemRepository.save(bankItem2);
+        }
+
+        // Seed POS Shifts (Sprint 9)
+        if (posShiftRepository.findByLegalEntityIdOrderByOpenedAtDesc(demo.getId()).isEmpty()) {
+            // Ca 1: Đã chốt ca sáng, cân bằng 100%
+            PosShift shift1 = PosShift.builder()
+                    .legalEntity(demo)
+                    .storeCode("STORE-HCM-01")
+                    .shiftCode("SHIFT-HCM01-20261113-01")
+                    .cashierUsername("thu_ngan_nguyen_thi_a")
+                    .openedAt(Instant.now().minusSeconds(28800))
+                    .closedAt(Instant.now().minusSeconds(14400))
+                    .status(PosShiftStatus.CLOSED)
+                    .openingFloat(new BigDecimal("2000000.0000"))
+                    .totalCashSales(new BigDecimal("3500000.0000"))
+                    .totalCardSales(new BigDecimal("1850000.0000"))
+                    .totalQrSales(new BigDecimal("1200000.0000"))
+                    .expectedCashAmount(new BigDecimal("5500000.0000"))
+                    .actualCountedCash(new BigDecimal("5500000.0000"))
+                    .differenceAmount(BigDecimal.ZERO)
+                    .closingNotes("Ca sáng hoàn tất: Két tiền mặt khớp chính xác 100%. Bàn giao tiền cho quản lý.")
+                    .managerApprovedBy("quan_ly_tran_van_b")
+                    .build();
+            posShiftRepository.save(shift1);
+
+            PosShiftCashCount c1 = PosShiftCashCount.builder().shift(shift1).denomination(500000).quantity(8).totalAmount(new BigDecimal("4000000.0000")).build();
+            PosShiftCashCount c2 = PosShiftCashCount.builder().shift(shift1).denomination(200000).quantity(5).totalAmount(new BigDecimal("1000000.0000")).build();
+            PosShiftCashCount c3 = PosShiftCashCount.builder().shift(shift1).denomination(100000).quantity(5).totalAmount(new BigDecimal("500000.0000")).build();
+            posShiftCashCountRepository.save(c1);
+            posShiftCashCountRepository.save(c2);
+            posShiftCashCountRepository.save(c3);
+
+            // Ca 2: Đang mở (OPEN) ca chiều để người dùng thao tác chốt ca trực tiếp
+            PosShift shift2 = PosShift.builder()
+                    .legalEntity(demo)
+                    .storeCode("STORE-HCM-01")
+                    .shiftCode("SHIFT-HCM01-20261113-02")
+                    .cashierUsername("thu_ngan_le_van_c")
+                    .openedAt(Instant.now().minusSeconds(7200))
+                    .status(PosShiftStatus.OPEN)
+                    .openingFloat(new BigDecimal("1500000.0000"))
+                    .expectedCashAmount(new BigDecimal("1500000.0000"))
+                    .build();
+            posShiftRepository.save(shift2);
+            log.info("Initialized DEMO POS Shifts for Sprint 9: 1 CLOSED (Balanced) and 1 OPEN");
         }
     }
 }

@@ -58,7 +58,34 @@ Hệ thống được tích hợp sẵn giao diện Web Portal trực quan phụ
 
 ---
 
-### 🔌 Phân hệ 2: Tích hợp Nhà cung cấp HĐĐT & Webhook CQT (Sprint 6)
+### 🏪 Phân hệ 2: Đóng Ca Thu Ngân POS & Đối Soát Sao Kê Ngân Hàng (Sprint 9)
+
+> Phân hệ kiểm soát doanh thu bán lẻ tại cửa hàng offline (POS), kiểm kê két tiền mặt theo từng mệnh giá VND, đối soát sao kê tài khoản ngân hàng điện tử (Vietcombank, Techcombank, BIDV, VietinBank) tự động bóc tách mã đơn chuyển khoản VietQR.
+
+1. **Xem Bảng Thống Kê & Lịch Sử Ca Bán Hàng (POS Shifts)**:
+   - Chọn menu bên trái: **"Đóng Ca POS & Ngân Hàng (S9)"**.
+   - Thẻ thống kê thời gian thực:
+     - **Số Ca Bán Hàng Hôm Nay**: Tổng số lượt ca đã mở tại các chi nhánh cửa hàng.
+     - **Tổng Tiền Mặt Đã Đếm**: Tổng số tiền mặt thực tế đã đếm và kiểm kê trong két.
+     - **Tổng Tiền Lệch Két**: Số tiền chênh lệch thừa/thiếu giữa tiền bán hàng thực tế và tiền mặt trong két.
+   - Bảng **"Lịch Sử Ca Bán Hàng Tại Cửa Hàng (POS Shifts)"**: Hiển thị Mã ca (VD: `SHIFT-HCM01-20261113-01`), Chi nhánh cửa hàng, Thu ngân, Số dư đầu ca, Tiền bán trong ca (Tiền mặt, Thẻ, QR), Tiền mặt thực đếm, Chênh lệch và Trạng thái (`OPEN`, `CLOSED`).
+2. **Kiểm Đếm Tiền Mặt Mệnh Giá VND (Cash Denomination Calculator)**:
+   - Khi kết ca, thu ngân hoặc quản lý cửa hàng nhập số lượng từng loại tiền giấy VND đang có trong két:
+     - 500,000 VND, 200,000 VND, 100,000 VND, 50,000 VND, 20,000 VND, 10,000 VND.
+   - Hệ thống tự động tính thành tiền từng loại và tổng tiền mặt thực tế đếm được.
+   - Nhập thông tin doanh số thu qua POS trong ca (Tiền mặt, Thẻ quẹt, VietQR) và ghi chú đóng ca.
+   - Nhấn nút **"Chốt & Đóng Ca Bán Hàng"**:
+     - Nếu số tiền đếm được bằng đúng `Số dư đầu ca + Tiền mặt bán`: Hệ thống ghi nhận cân bằng 100% (`difference = 0`).
+     - Nếu thiếu tiền: Cảnh báo `CASH_SHORTAGE` màu đỏ để lập biên bản thu hồi tiền thu ngân.
+     - Nếu thừa tiền: Cảnh báo `CASH_OVERAGE` màu xanh để hạch toán thu nhập khác.
+3. **Nạp & Đối Soát Sao Kê Ngân Hàng (Bank Statement Ingestion)**:
+   - Nạp tệp sao kê tài khoản Vietcombank (định dạng CSV: `transaction_id`, `booking_date`, `debit_amount`, `credit_amount`, `balance`, `description`).
+   - Nhấn nút **"Nạp Mẫu Sao Kê VCB"**: Hệ thống điền mẫu 2 giao dịch chuyển khoản thanh toán VietQR.
+   - Nhấn **"Khởi Chạy Đối Soát Ngân Hàng"**: Matching Engine tự động trích xuất các mã đơn `DH-20261113-888`, `SP-20261113-999` từ nội dung chuyển khoản để đối chiếu và đối soát.
+
+---
+
+### 🔌 Phân hệ 3: Tích hợp Nhà cung cấp HĐĐT & Webhook CQT (Sprint 6)
 
 > Tích hợp Production Gateway (VNPT Invoice), Token Caching, Khóa bi quan chống cấp trùng và Webhook phản hồi từ Cơ quan Thuế (CQT).
 
@@ -82,7 +109,7 @@ Hệ thống được tích hợp sẵn giao diện Web Portal trực quan phụ
 
 ---
 
-### 🧾 Phân hệ 2: Hóa đơn điện tử E-Invoice Core (Sprint 5)
+### 🧾 Phân hệ 4: Hóa đơn điện tử E-Invoice Core (Sprint 5)
 
 > Tuân thủ chuẩn **Nghị định 123/2020/NĐ-CP** và **Thông tư 78/2021/TT-BTC**.
 
@@ -108,7 +135,7 @@ Hệ thống được tích hợp sẵn giao diện Web Portal trực quan phụ
 
 ---
 
-### 📒 Phân hệ 2: Sổ cái & Quản lý Quỹ tiền (Sprint 4)
+### 📒 Phân hệ 5: Sổ cái & Quản lý Quỹ tiền (Sprint 4)
 
 1. **Xem số dư Quỹ tiền mặt & Ngân hàng**:
    - Chọn menu **"Sổ cái & Quỹ tiền (S4)"**.
@@ -121,7 +148,7 @@ Hệ thống được tích hợp sẵn giao diện Web Portal trực quan phụ
 
 ---
 
-### 💳 Phân hệ 3: Giao dịch & Chi phí Đa Kênh (Sprint 3)
+### 💳 Phân hệ 6: Giao dịch & Chi phí Đa Kênh (Sprint 3)
 
 1. **Mô phỏng Nhận đơn hàng Đa kênh**:
    - Chọn menu **"Giao dịch & Chi phí (S3)"**.
@@ -133,14 +160,14 @@ Hệ thống được tích hợp sẵn giao diện Web Portal trực quan phụ
 
 ---
 
-### 🏢 Phân hệ 4: Pháp nhân & Cấu hình Thuế (Sprint 2)
+### 🏢 Phân hệ 7: Pháp nhân & Cấu hình Thuế (Sprint 2)
 
 - Chọn menu **"Pháp nhân & Thuế (S2)"**.
 - Hiển thị danh mục các thực thể pháp nhân (Công ty thời trang, Chi nhánh) kèm Mã số thuế, Địa chỉ trụ sở và trạng thái hoạt động `ACTIVE`.
 
 ---
 
-### ⚙️ Phân hệ 5: Hạ tầng & Trạng thái Hệ thống (Sprint 1)
+### ⚙️ Phân hệ 8: Hạ tầng & Trạng thái Hệ thống (Sprint 1)
 
 - Chọn menu **"Hạ tầng & Hệ thống (S1)"**.
 - Giám sát trạng thái 3 trụ cột hạ tầng cốt lõi:
