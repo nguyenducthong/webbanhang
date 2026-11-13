@@ -38,6 +38,19 @@ public class InvoiceProviderAccount {
     @Column(name = "api_endpoint", nullable = false)
     private String apiEndpoint;
 
+    @Column(name = "auth_token_cached", columnDefinition = "TEXT")
+    private String authTokenCached;
+
+    @Column(name = "token_expiry")
+    private Instant tokenExpiry;
+
+    @Column(name = "webhook_secret", length = 255)
+    @Builder.Default
+    private String webhookSecret = "sec_webhook_default_key_2026";
+
+    @Column(name = "certificate_serial", length = 100)
+    private String certificateSerial;
+
     @Column(name = "is_active", nullable = false)
     @Builder.Default
     private boolean active = true;

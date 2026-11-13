@@ -75,7 +75,7 @@ public class InvoiceDraftService {
 
         // 6. Tìm Provider Account
         InvoiceProviderAccount providerAccount = providerAccountRepository
-                .findByLegalEntityIdAndActiveTrue(legalEntity.getId())
+                .findFirstByLegalEntityIdAndActiveTrue(legalEntity.getId())
                 .orElse(null);
 
         // 7. Gắn FinanceTransaction nếu có

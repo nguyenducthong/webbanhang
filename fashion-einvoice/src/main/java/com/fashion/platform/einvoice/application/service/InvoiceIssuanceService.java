@@ -100,10 +100,11 @@ public class InvoiceIssuanceService {
 
     @Transactional
     public Invoice issueInvoice(UUID invoiceId, String performedBy) {
-        Invoice invoice = invoiceRepository.findById(invoiceId)
+        // Khóa bi quan (Pessimistic Lock) chặn race condition giữa các luồng phát hành đồng thời
+        Invoice invoice = invoiceRepository.findByIdForUpdate(invoiceId)
                 .orElseThrow(() -> new IllegalArgumentException("Invoice not found: " + invoiceId));
 
-        // 1. Nếu đã ISSUED thì trả về ngay
+        // 1. Nếu đã ISSUED hoặc đang SUBMITTED thì trả về ngay để tránh Duplicate Issuance
         if (invoice.getInvoiceStatus() == InvoiceStatus.ISSUED) {
             log.warn("Invoice {} is already ISSUED. Returning current state.", invoiceId);
             return invoice;

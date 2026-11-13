@@ -16,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -53,6 +54,22 @@ public class InvoiceController {
         String currentUser = SecurityContextHelper.getCurrentUsername();
         Invoice invoice = issuanceService.queryAndSyncStatus(id, currentUser);
         return ResponseEntity.ok(InvoiceResponse.fromEntity(invoice));
+    }
+
+    @PostMapping("/{id}/force-sync")
+    public ResponseEntity<InvoiceResponse> forceSync(@PathVariable UUID id) {
+        String currentUser = SecurityContextHelper.getCurrentUsername();
+        Invoice invoice = issuanceService.queryAndSyncStatus(id, currentUser + "_FORCE");
+        return ResponseEntity.ok(InvoiceResponse.fromEntity(invoice));
+    }
+
+    @GetMapping("/stuck")
+    public ResponseEntity<List<InvoiceResponse>> getStuckInvoices() {
+        List<Invoice> stuck = invoiceRepository.findByInvoiceStatusIn(
+                List.of(com.fashion.platform.einvoice.domain.model.InvoiceStatus.UNKNOWN_RESULT,
+                        com.fashion.platform.einvoice.domain.model.InvoiceStatus.SUBMITTED)
+        );
+        return ResponseEntity.ok(stuck.stream().map(InvoiceResponse::fromEntity).toList());
     }
 
     @GetMapping("/{id}")

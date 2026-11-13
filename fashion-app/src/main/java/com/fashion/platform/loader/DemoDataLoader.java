@@ -106,7 +106,7 @@ public class DemoDataLoader implements ApplicationRunner {
                     return invoiceProviderRepository.save(p);
                 });
 
-        if (invoiceProviderAccountRepository.findByLegalEntityIdAndActiveTrue(demo.getId()).isEmpty()) {
+        if (invoiceProviderAccountRepository.findByLegalEntityIdAndProviderId(demo.getId(), fakeProvider.getId()).isEmpty()) {
             InvoiceProviderAccount account = InvoiceProviderAccount.builder()
                     .legalEntity(demo)
                     .provider(fakeProvider)
@@ -116,6 +116,30 @@ public class DemoDataLoader implements ApplicationRunner {
                     .build();
             invoiceProviderAccountRepository.save(account);
             log.info("Initialized DEMO E-Invoice Provider Account");
+        }
+
+        // Seed E-Invoice Provider VNPT
+        InvoiceProvider vnptProvider = invoiceProviderRepository.findByProviderCode("VNPT")
+                .orElseGet(() -> {
+                    InvoiceProvider p = InvoiceProvider.builder()
+                            .providerCode("VNPT")
+                            .name("VNPT Electronic Invoice Gateway (Nghị định 123)")
+                            .active(true)
+                            .build();
+                    return invoiceProviderRepository.save(p);
+                });
+
+        if (invoiceProviderAccountRepository.findByLegalEntityIdAndProviderId(demo.getId(), vnptProvider.getId()).isEmpty()) {
+            InvoiceProviderAccount vnptAccount = InvoiceProviderAccount.builder()
+                    .legalEntity(demo)
+                    .provider(vnptProvider)
+                    .accountUsername("fashion_vnpt_merchant")
+                    .apiEndpoint("https://api-einvoice.vnpt.vn/v2")
+                    .webhookSecret("sec_webhook_default_key_2026")
+                    .active(true)
+                    .build();
+            invoiceProviderAccountRepository.save(vnptAccount);
+            log.info("Initialized DEMO VNPT E-Invoice Provider Account");
         }
 
         if (invoiceTemplateRepository.findFirstByLegalEntityIdAndInvoiceTypeAndActiveTrue(demo.getId(), InvoiceType.VAT_INVOICE).isEmpty()) {

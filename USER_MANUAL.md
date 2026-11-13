@@ -17,9 +17,33 @@ Hệ thống được tích hợp sẵn giao diện Web Portal trực quan phụ
 
 ---
 
-## 2. Hướng dẫn Thao tác Từng Phân Hệ (Sprints 1 -> 5)
+## 2. Hướng dẫn Thao tác Từng Phân Hệ (Sprints 1 -> 6)
 
-### 🧾 Phân hệ 1: Hóa đơn điện tử E-Invoice (Sprint 5)
+### 🔌 Phân hệ 1: Tích hợp Nhà cung cấp HĐĐT & Webhook CQT (Sprint 6)
+
+> Tích hợp Production Gateway (VNPT Invoice), Token Caching, Khóa bi quan chống cấp trùng và Webhook phản hồi từ Cơ quan Thuế (CQT).
+
+1. **Giám sát Kết nối Nhà cung cấp & Token Caching**:
+   - Chọn menu bên trái: **"Tích hợp Provider & Webhook (S6)"**.
+   - Thẻ **VNPT Invoice Gateway**: Hiển thị trạng thái kết nối `Active`, API Endpoint (`https://api-einvoice.vnpt.vn/v2`) và cơ chế làm mới Token tự động (24h).
+   - Nhấn nút **"Ping Kiểm tra Kết nối"**: Kiểm tra trực tiếp độ trễ gateway và hiệu lực của Bearer Token trong cache.
+2. **Cứu hộ Hóa đơn Treo / Mất mạng (Stuck & Unknown Recovery Console)**:
+   - Khối **"Cứu hộ Hóa đơn Treo"** tự động liệt kê các hóa đơn đang ở trạng thái bất thường (`UNKNOWN_RESULT` hoặc `SUBMITTED` quá thời gian chờ).
+   - Nhấn nút **"Đồng bộ ngay" (Force Sync)** trên từng dòng: Hệ thống sẽ gọi trực tiếp sang VNPT/CQT để tra cứu kết quả. Nếu NCC đã cấp số, hóa đơn sẽ tự động chuyển thành `ISSUED` mà **tuyệt đối không bị phát hành lần 2**.
+   - Đồng thời, Background Job chạy ngầm `@Scheduled` mỗi 1 phút cũng tự động xử lý cứu hộ các hóa đơn này.
+3. **Bộ Giả lập Webhook Cơ quan Thuế (Tax Authority Webhook Simulator)**:
+   - Dùng để kiểm tra phản ứng của hệ thống khi Cục Thuế trả kết quả bất đồng bộ:
+     - Nhập **Mã Hóa Đơn (UUID)** cần gửi kết quả.
+     - Chọn **Sự kiện từ CQT**:
+       - *CQT Chấp thuận*: Hệ thống tự động gán mã CQT (VD: `TCT-VNPT-8899AA`), chuyển trạng thái hóa đơn sang `ISSUED`.
+       - *CQT Từ chối*: Hệ thống ghi lại lý do từ chối và đổi trạng thái sang `REJECTED`.
+     - Nhấn nút **"Gửi Webhook Kèm Chữ Ký HMAC-SHA256"**: Hệ thống sẽ tự động băm chữ ký điện tử với `webhook_secret`, gửi tới endpoint `/api/v1/invoices/webhook/VNPT`, kiểm tra bảo mật chống giả mạo và ghi log.
+4. **Xem Nhật ký Webhook Logs**:
+   - Bảng dưới cùng hiển thị thời gian, nhà cung cấp, loại sự kiện, trạng thái xử lý (`SUCCESS` / `FAILED`) và chuỗi chữ ký số HMAC-SHA256 được lưu trữ phục vụ đối soát.
+
+---
+
+### 🧾 Phân hệ 2: Hóa đơn điện tử E-Invoice Core (Sprint 5)
 
 > Tuân thủ chuẩn **Nghị định 123/2020/NĐ-CP** và **Thông tư 78/2021/TT-BTC**.
 

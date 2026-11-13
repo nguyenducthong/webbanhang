@@ -9,6 +9,6 @@ import java.util.UUID;
 
 @Repository
 public interface InvoiceProviderAccountRepository extends JpaRepository<InvoiceProviderAccount, UUID> {
-    Optional<InvoiceProviderAccount> findByLegalEntityIdAndActiveTrue(UUID legalEntityId);
+    Optional<InvoiceProviderAccount> findFirstByLegalEntityIdAndActiveTrue(UUID legalEntityId);
     Optional<InvoiceProviderAccount> findByLegalEntityIdAndProviderId(UUID legalEntityId, UUID providerId);
 }
