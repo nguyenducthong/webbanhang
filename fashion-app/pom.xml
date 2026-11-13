@@ -28,6 +28,10 @@
             <groupId>com.fashion.platform</groupId>
             <artifactId>fashion-finance</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.fashion.platform</groupId>
+            <artifactId>fashion-einvoice</artifactId>
+        </dependency>
 
         <!-- Web & Actuator -->
         <dependency>

@@ -16,6 +16,10 @@ public final class SecurityContextHelper {
         return Optional.ofNullable(CURRENT_USER.get());
     }
 
+    public static String getCurrentUsername() {
+        return getContext().map(UserContext::getUsername).orElse("system");
+    }
+
     public static void clearContext() {
         CURRENT_USER.remove();
     }

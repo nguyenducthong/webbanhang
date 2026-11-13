@@ -1,5 +1,12 @@
 package com.fashion.platform.loader;
 
+import com.fashion.platform.einvoice.domain.model.InvoiceProvider;
+import com.fashion.platform.einvoice.domain.model.InvoiceProviderAccount;
+import com.fashion.platform.einvoice.domain.model.InvoiceTemplate;
+import com.fashion.platform.einvoice.domain.model.InvoiceType;
+import com.fashion.platform.einvoice.domain.repository.InvoiceProviderAccountRepository;
+import com.fashion.platform.einvoice.domain.repository.InvoiceProviderRepository;
+import com.fashion.platform.einvoice.domain.repository.InvoiceTemplateRepository;
 import com.fashion.platform.finance.domain.entity.*;
 import com.fashion.platform.finance.repository.AccountingPeriodRepository;
 import com.fashion.platform.finance.repository.CashAccountRepository;
@@ -23,6 +30,9 @@ public class DemoDataLoader implements ApplicationRunner {
     private final AccountingPeriodRepository periodRepository;
     private final AccountingAccountService accountService;
     private final CashAccountRepository cashAccountRepository;
+    private final InvoiceProviderRepository invoiceProviderRepository;
+    private final InvoiceProviderAccountRepository invoiceProviderAccountRepository;
+    private final InvoiceTemplateRepository invoiceTemplateRepository;
 
     @Override
     public void run(ApplicationArguments args) {
@@ -83,6 +93,41 @@ public class DemoDataLoader implements ApplicationRunner {
                     .build();
             cashAccountRepository.save(bankAcc);
             log.info("Initialized DEMO Cash and Bank Accounts");
+        }
+
+        // Seed E-Invoice Provider & Account & Template
+        InvoiceProvider fakeProvider = invoiceProviderRepository.findByProviderCode("FAKE")
+                .orElseGet(() -> {
+                    InvoiceProvider p = InvoiceProvider.builder()
+                            .providerCode("FAKE")
+                            .name("Mock Electronic Invoice Provider")
+                            .active(true)
+                            .build();
+                    return invoiceProviderRepository.save(p);
+                });
+
+        if (invoiceProviderAccountRepository.findByLegalEntityIdAndActiveTrue(demo.getId()).isEmpty()) {
+            InvoiceProviderAccount account = InvoiceProviderAccount.builder()
+                    .legalEntity(demo)
+                    .provider(fakeProvider)
+                    .accountUsername("demo_einvoice_user")
+                    .apiEndpoint("https://einvoice-api.fake-provider.vn/v1")
+                    .active(true)
+                    .build();
+            invoiceProviderAccountRepository.save(account);
+            log.info("Initialized DEMO E-Invoice Provider Account");
+        }
+
+        if (invoiceTemplateRepository.findFirstByLegalEntityIdAndInvoiceTypeAndActiveTrue(demo.getId(), InvoiceType.VAT_INVOICE).isEmpty()) {
+            InvoiceTemplate template = InvoiceTemplate.builder()
+                    .legalEntity(demo)
+                    .templateCode("1/001")
+                    .invoiceSeries("C26TDD")
+                    .invoiceType(InvoiceType.VAT_INVOICE)
+                    .active(true)
+                    .build();
+            invoiceTemplateRepository.save(template);
+            log.info("Initialized DEMO E-Invoice Template: 1/001 - C26TDD");
         }
     }
 }
